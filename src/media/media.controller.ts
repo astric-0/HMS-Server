@@ -13,20 +13,25 @@ import { join } from 'path';
 import { Response, Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { readdir } from 'fs/promises';
+import { MediaType } from './types';
+import { MediaConfig } from './media.config';
 
 @Controller('media')
 export class MediaController {
-  constructor(private configService: ConfigService) {}
+  constructor(private configService: ConfigService) {
+    this.mediaConfig = MediaConfig.getInstance();
+  }
 
-  private readonly VIDEO_DIR =
-    this.configService.get<string>('VIDEO_DIR') ||
-    join(__dirname, '..', '..', 'media', 'videos');
+  private readonly mediaConfig: MediaConfig;
 
-  private getMediaFilePath(filename: string): string {
-    const filePath = join(__dirname, '..', '..', this.VIDEO_DIR, filename);
+  private getMediaFilePath(filename: string, type: MediaType): string {
+    const mediaPath = this.mediaConfig.getMediaPath(type);
+    const filePath = join(__dirname, '..', '..', mediaPath, filename);
+
     if (!existsSync(filePath)) {
       throw new HttpException('File not found', HttpStatus.NOT_FOUND);
     }
+
     return filePath;
   }
 
@@ -37,11 +42,12 @@ export class MediaController {
     @Res() res: Response,
   ) {
     try {
-      const filePath = this.getMediaFilePath(filename);
+      const mediaType: MediaType = req.header('media_type') as MediaType;
+      const filePath = this.getMediaFilePath(filename, mediaType);
       const stat = statSync(filePath);
+
       const fileSize = stat.size;
       const range = req.headers.range;
-
       if (!range) {
         res.status(416).send('Range header is required');
         return;
@@ -72,14 +78,14 @@ export class MediaController {
     }
   }
 
-  @Get('list')
+  @Get('movies/list')
   async getVideoList() {
-    const files = await readdir(this.VIDEO_DIR);
+    const files = await readdir(this.mediaConfig.getMediaPath(MediaType.MOVIE));
 
     return {
       videos: files.map((filename) => ({
         name: filename,
-        path: `/media/file/${filename}`,
+        type: MediaType.MOVIE,
       })),
     };
   }

@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { AppModule } from './app.module';
+import { MediaConfig } from './media/media.config';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -9,9 +10,12 @@ async function bootstrap() {
 
   app.useStaticAssets(MEDIA_DIR, { prefix: '/thumbnails' });
   app.enableCors();
+  MediaConfig.getInstance();
+
   const port = process.env.PORT;
   const host = process.env.HOST;
   console.log(`Server running at http://${host}:${port}`);
+
   await app.listen(port, host);
 }
 
