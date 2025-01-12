@@ -9,7 +9,7 @@ import {
   NotFoundException,
   Inject,
 } from '@nestjs/common';
-import { createReadStream, statSync } from 'fs';
+import { statSync } from 'fs';
 import { Response, Request } from 'express';
 import { readdir } from 'fs/promises';
 import { MediaType } from './types';
@@ -60,7 +60,11 @@ export class MediaController {
       }
 
       const chunkSize = end - start + 1;
-      const fileStream = createReadStream(filePath, { start, end });
+      const fileStream = this.mediaService.convertChunkToMp4(
+        filePath,
+        start,
+        end,
+      );
 
       res.writeHead(206, {
         'Content-Range': `bytes ${start}-${end}/${fileSize}`,
