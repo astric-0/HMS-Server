@@ -9,9 +9,10 @@ async function bootstrap() {
 
   app.useStaticAssets(MEDIA_DIR, { prefix: '/thumbnails' });
   app.enableCors();
-  const port = 3000;
-  console.log(`Server running at http://localhost:${port}`);
-  await app.listen(port, '0.0.0.0');
+  const port = process.env.PORT;
+  const host = process.env.HOST;
+  console.log(`Server running at http://${host}:${port}`);
+  await app.listen(port, host);
 }
 
 bootstrap();
