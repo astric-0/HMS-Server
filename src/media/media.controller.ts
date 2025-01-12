@@ -7,6 +7,7 @@ import {
   HttpException,
   HttpStatus,
   InternalServerErrorException,
+  Query,
 } from '@nestjs/common';
 import { createReadStream, statSync, existsSync } from 'fs';
 import { join } from 'path';
@@ -40,9 +41,9 @@ export class MediaController {
     @Param('filename') filename: string,
     @Req() req: Request,
     @Res() res: Response,
+    @Query('media_type') mediaType: MediaType,
   ) {
     try {
-      const mediaType: MediaType = req.header('media_type') as MediaType;
       const filePath = this.getMediaFilePath(filename, mediaType);
       const stat = statSync(filePath);
 
@@ -86,6 +87,7 @@ export class MediaController {
       videos: files.map((filename) => ({
         name: filename,
         type: MediaType.MOVIE,
+        url: `/media/file/${filename}?media_type=${MediaType.MOVIE}`,
       })),
     };
   }
