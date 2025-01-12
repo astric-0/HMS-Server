@@ -6,6 +6,7 @@ import {
   Param,
   HttpException,
   HttpStatus,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { createReadStream, statSync, existsSync } from 'fs';
 import { join } from 'path';
@@ -67,7 +68,7 @@ export class MediaController {
 
       fileStream.pipe(res);
     } catch (error) {
-      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
@@ -76,9 +77,9 @@ export class MediaController {
     const files = await readdir(this.VIDEO_DIR);
 
     return {
-      videos: files.map((file) => ({
-        name: file,
-        path: `/media/file/${file}`,
+      videos: files.map((filename) => ({
+        name: filename,
+        path: `/media/file/${filename}`,
       })),
     };
   }
