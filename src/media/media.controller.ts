@@ -4,56 +4,26 @@ import {
   Res,
   Req,
   Param,
-  HttpException,
-  HttpStatus,
   InternalServerErrorException,
   Query,
+  NotFoundException,
+  Inject,
 } from '@nestjs/common';
-import { createReadStream, statSync, existsSync } from 'fs';
-import { join, extname } from 'path';
+import { createReadStream, statSync } from 'fs';
 import { Response, Request } from 'express';
-import { ConfigService } from '@nestjs/config';
 import { readdir } from 'fs/promises';
 import { MediaType } from './types';
 import { MediaConfig } from './media.config';
+import { MediaService } from './media.service';
 
 @Controller('media')
 export class MediaController {
-  constructor(private configService: ConfigService) {
-    this.mediaConfig = MediaConfig.getInstance();
-  }
-
-  private readonly mediaConfig: MediaConfig;
-
-  private getMediaFilePath(filename: string, type: MediaType): string {
-    const mediaPath = this.mediaConfig.getMediaPath(type);
-    const filePath = join(__dirname, '..', '..', mediaPath, filename);
-
-    if (!existsSync(filePath)) {
-      throw new HttpException('File not found', HttpStatus.NOT_FOUND);
-    }
-
-    return filePath;
-  }
-
-  private getMimeType(filePath: string): string {
-    const ext = extname(filePath).toLowerCase();
-    const mimeTypes = {
-      '.mp4': 'video/mp4',
-      '.webm': 'video/webm',
-      '.ogg': 'video/ogg',
-      '.mov': 'video/quicktime',
-      '.mkv': 'video/x-matroska',
-      '.avi': 'video/x-msvideo',
-      '.mp3': 'audio/mpeg',
-      '.wav': 'audio/wav',
-      '.jpg': 'image/jpeg',
-      '.jpeg': 'image/jpeg',
-      '.png': 'image/png',
-      '.gif': 'image/gif',
-    };
-    return mimeTypes[ext] || 'application/octet-stream';
-  }
+  constructor(
+    @Inject(MediaService)
+    private readonly mediaService: MediaService,
+    @Inject(MediaConfig)
+    private readonly mediaConfig: MediaConfig,
+  ) {}
 
   @Get('file/:filename')
   streamMedia(
@@ -63,12 +33,18 @@ export class MediaController {
     @Query('media_type') mediaType: MediaType,
   ) {
     try {
-      const filePath = this.getMediaFilePath(filename, mediaType);
-      const stat = statSync(filePath);
-      const mimeType = this.getMimeType(filePath);
+      const filePath = this.mediaService.getMediaFilePath(filename, mediaType);
 
+      if (!filePath) {
+        throw new NotFoundException('File not found');
+      }
+
+      const mimeType = this.mediaService.getMimeType(filePath);
+
+      const stat = statSync(filePath);
       const fileSize = stat.size;
       const range = req.headers.range;
+
       if (!range) {
         res.status(416).send('Range header is required');
         return;

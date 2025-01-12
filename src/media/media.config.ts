@@ -1,20 +1,17 @@
-import { MediaPaths, MediaType } from './types';
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { MediaType, MediaPaths } from './types';
 
+@Injectable()
 export class MediaConfig {
   private readonly mediaPaths: MediaPaths;
-  private static instance: MediaConfig;
 
-  public constructor() {
+  public constructor(private readonly configService: ConfigService) {
     this.mediaPaths = {
-      [MediaType.MEDIA]: process.env.MEDIA_DIR,
-      [MediaType.MOVIE]: process.env.MOVIE_DIR,
-      [MediaType.SERIES]: process.env.SERIES_DIR,
+      [MediaType.MEDIA]: configService.get('MEDIA_DIR'),
+      [MediaType.MOVIE]: configService.get('MOVIE_DIR'),
+      [MediaType.SERIES]: configService.get('SERIES_DIR'),
     };
-  }
-
-  public static getInstance() {
-    if (!MediaConfig.instance) MediaConfig.instance = new MediaConfig();
-    return MediaConfig.instance;
   }
 
   public getMediaPath(type: MediaType) {
