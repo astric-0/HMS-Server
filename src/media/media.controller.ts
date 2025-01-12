@@ -10,7 +10,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { createReadStream, statSync, existsSync } from 'fs';
-import { join } from 'path';
+import { join, extname } from 'path';
 import { Response, Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { readdir } from 'fs/promises';
@@ -36,6 +36,25 @@ export class MediaController {
     return filePath;
   }
 
+  private getMimeType(filePath: string): string {
+    const ext = extname(filePath).toLowerCase();
+    const mimeTypes = {
+      '.mp4': 'video/mp4',
+      '.webm': 'video/webm',
+      '.ogg': 'video/ogg',
+      '.mov': 'video/quicktime',
+      '.mkv': 'video/x-matroska',
+      '.avi': 'video/x-msvideo',
+      '.mp3': 'audio/mpeg',
+      '.wav': 'audio/wav',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.png': 'image/png',
+      '.gif': 'image/gif',
+    };
+    return mimeTypes[ext] || 'application/octet-stream';
+  }
+
   @Get('file/:filename')
   streamMedia(
     @Param('filename') filename: string,
@@ -46,6 +65,7 @@ export class MediaController {
     try {
       const filePath = this.getMediaFilePath(filename, mediaType);
       const stat = statSync(filePath);
+      const mimeType = this.getMimeType(filePath);
 
       const fileSize = stat.size;
       const range = req.headers.range;
@@ -70,7 +90,7 @@ export class MediaController {
         'Content-Range': `bytes ${start}-${end}/${fileSize}`,
         'Accept-Ranges': 'bytes',
         'Content-Length': chunkSize,
-        'Content-Type': 'video/mp4',
+        'Content-Type': mimeType,
       });
 
       fileStream.pipe(res);
