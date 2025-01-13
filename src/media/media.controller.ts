@@ -39,8 +39,6 @@ export class MediaController {
         throw new NotFoundException('File not found');
       }
 
-      const mimeType = this.mediaService.getMimeType(filePath);
-
       const stat = statSync(filePath);
       const fileSize = stat.size;
       const range = req.headers.range;
@@ -60,7 +58,7 @@ export class MediaController {
       }
 
       const chunkSize = end - start + 1;
-      const fileStream = this.mediaService.convertChunkToMp4(
+      const fileStream = this.mediaService.createReadStream(
         filePath,
         start,
         end,
@@ -70,7 +68,7 @@ export class MediaController {
         'Content-Range': `bytes ${start}-${end}/${fileSize}`,
         'Accept-Ranges': 'bytes',
         'Content-Length': chunkSize,
-        'Content-Type': mimeType,
+        'Content-Type': 'video/mp4',
       });
 
       fileStream.pipe(res);
@@ -91,4 +89,13 @@ export class MediaController {
       })),
     };
   }
+
+  // @Get('movies/:filename/metadata')
+  // async getMovieMetadata(@Param('filename') filename: string) {
+  //   const metadata = await this.mediaService.getMovieMetadata(filename);
+  //   if (!metadata) {
+  //     throw new NotFoundException('Movie not found');
+  //   }
+  //   return metadata;
+  // }
 }
