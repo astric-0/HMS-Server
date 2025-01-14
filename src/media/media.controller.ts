@@ -85,17 +85,8 @@ export class MediaController {
       videos: files.map((filename) => ({
         name: filename,
         type: MediaType.MOVIE,
-        url: `/media/file/${filename}?media_type=${MediaType.MOVIE}`,
+        url: `/media/file/${encodeURIComponent(filename)}?media_type=${MediaType.MOVIE}`,
       })),
     };
   }
-
-  // @Get('movies/:filename/metadata')
-  // async getMovieMetadata(@Param('filename') filename: string) {
-  //   const metadata = await this.mediaService.getMovieMetadata(filename);
-  //   if (!metadata) {
-  //     throw new NotFoundException('Movie not found');
-  //   }
-  //   return metadata;
-  // }
 }
