@@ -11,9 +11,7 @@ import {
 } from '@nestjs/common';
 import { statSync } from 'fs';
 import { Response, Request } from 'express';
-import { readdir } from 'fs/promises';
 import { MediaType } from './types';
-import { MediaConfig } from './media.config';
 import { MediaService } from './media.service';
 
 @Controller('media')
@@ -21,8 +19,6 @@ export class MediaController {
   constructor(
     @Inject(MediaService)
     private readonly mediaService: MediaService,
-    @Inject(MediaConfig)
-    private readonly mediaConfig: MediaConfig,
   ) {}
 
   @Get('file/:filename')
@@ -31,9 +27,16 @@ export class MediaController {
     @Req() req: Request,
     @Res() res: Response,
     @Query('media_type') mediaType: MediaType,
+    @Query('series_name') seriesName?: string,
+    @Query('season_name') seasonName?: string,
   ) {
     try {
-      const filePath = this.mediaService.getMediaFilePath(filename, mediaType);
+      const filePath = this.mediaService.getMediaFilePath(
+        filename,
+        mediaType,
+        seriesName,
+        seasonName,
+      );
 
       if (!filePath) {
         throw new NotFoundException('File not found');
@@ -78,15 +81,24 @@ export class MediaController {
   }
 
   @Get('movies/list')
-  async getVideoList() {
-    const files = await readdir(this.mediaConfig.getMediaPath(MediaType.MOVIE));
+  async getMovieList() {
+    const movies = await this.mediaService.readMovieDirectory();
+    return { movies };
+  }
 
-    return {
-      videos: files.map((filename) => ({
-        name: filename,
-        type: MediaType.MOVIE,
-        url: `/media/file/${encodeURIComponent(filename)}?media_type=${MediaType.MOVIE}`,
-      })),
-    };
+  @Get('series/list')
+  async getSeriesList() {
+    const series = await this.mediaService.getSeriesJson();
+    return { series };
+  }
+
+  @Get('create-series-json')
+  async createSeriesJson() {
+    try {
+      await this.mediaService.createSeriesJson();
+      return { message: 'Series directory created' };
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
   }
 }

@@ -11,6 +11,8 @@ export class MediaConfig {
       [MediaType.MEDIA]: configService.get('MEDIA_DIR'),
       [MediaType.MOVIE]: configService.get('MOVIE_DIR'),
       [MediaType.SERIES]: configService.get('SERIES_DIR'),
+      [MediaType.MOVIE_SERIES]: configService.get('MOVIE_SERIES_DIR'),
+      [MediaType.SERIES_JSON]: configService.get('SERIES_JSON_PATH'),
     };
   }
 

@@ -2,6 +2,8 @@ export enum MediaType {
   MEDIA = 'media',
   MOVIE = 'movie',
   SERIES = 'series',
+  MOVIE_SERIES = 'movie_series',
+  SERIES_JSON = 'series.json',
 }
 
 export type MediaPaths = {
@@ -30,4 +32,21 @@ export interface AudioTrack {
   language: string;
   codec: string;
   channels: string;
+}
+
+export interface SeriesDirectory {
+  name: string;
+  seasons: {
+    name: string;
+    episodes: {
+      name: string;
+      url: string;
+    }[];
+  }[];
+}
+
+export interface MovieDirectory {
+  name: string;
+  type: MediaType.MOVIE;
+  url: string;
 }
