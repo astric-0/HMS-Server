@@ -89,7 +89,7 @@ export class MediaService {
         files.map(async (dir) => {
           if (!dir.isDirectory()) return null;
 
-          query.set('season_name', dir.name);
+          query.set('season_name', encodeURIComponent(dir.name));
 
           return {
             name: dir.name,
@@ -114,7 +114,7 @@ export class MediaService {
 
     const seriesPromises = series.map(async (sc) => {
       if (!sc.isDirectory()) return null;
-      query.set('series_name', sc.name);
+      query.set('series_name', encodeURIComponent(sc.name));
 
       const movieSeries = await this.readMovieSeriesDirectory(
         join(path, sc.name),
