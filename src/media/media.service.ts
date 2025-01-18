@@ -89,7 +89,7 @@ export class MediaService {
         files.map(async (dir) => {
           if (!dir.isDirectory()) return null;
 
-          query.set('series_name', dir.name);
+          query.set('season_name', dir.name);
 
           return {
             name: dir.name,
