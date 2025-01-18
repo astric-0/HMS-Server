@@ -74,27 +74,28 @@ export class MediaService {
     }));
   }
 
-  async readMovieSeriesDirectory(
+  public async readMovieSeriesDirectory(
     path: string = this.mediaConfig.getMediaPath(MediaType.MOVIE_SERIES),
     media_type: MediaType = MediaType.MOVIE_SERIES,
-    query: URLSearchParams = new URLSearchParams({
-      media_type,
-    }),
+    series_name: string = '',
   ): Promise<MovieSeries[]> {
-    const files = await readdir(path, { withFileTypes: true });
+    const seasons = await readdir(path, { withFileTypes: true });
 
-    query.set('media_type', media_type);
     return (
       await Promise.all(
-        files.map(async (dir) => {
-          if (!dir.isDirectory()) return null;
+        seasons.map(async (season) => {
+          if (!season.isDirectory()) return null;
 
-          query.set('season_name', encodeURIComponent(dir.name));
+          const query = new URLSearchParams({
+            media_type,
+            season_name: season.name,
+            series_name,
+          });
 
           return {
-            name: dir.name,
+            name: season.name,
             episodes: await this.readMovieDirectory(
-              join(path, dir.name),
+              join(path, season.name),
               media_type,
               query,
             ),
@@ -106,25 +107,20 @@ export class MediaService {
 
   public async readSeriesDirectory(): Promise<Series[]> {
     const path = this.mediaConfig.getMediaPath(MediaType.SERIES);
-    const series = await readdir(path, { withFileTypes: true });
-    const media_type = MediaType.SERIES;
-    const query = new URLSearchParams({
-      media_type,
-    });
+    const shows = await readdir(path, { withFileTypes: true });
 
-    const seriesPromises = series.map(async (sc) => {
+    const seriesPromises = shows.map(async (sc) => {
       if (!sc.isDirectory()) return null;
-      query.set('series_name', encodeURIComponent(sc.name));
 
-      const movieSeries = await this.readMovieSeriesDirectory(
+      const seasons = await this.readMovieSeriesDirectory(
         join(path, sc.name),
-        media_type,
-        query,
+        MediaType.SERIES,
+        sc.name,
       );
 
       return {
         name: sc.name,
-        seasons: movieSeries,
+        seasons,
       };
     });
 
