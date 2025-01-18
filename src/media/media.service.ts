@@ -43,9 +43,9 @@ export class MediaService {
       '..',
       '..',
       mediaPath,
-      seriesName ?? '',
-      seasonName ?? '',
-      filename,
+      decodeURIComponent(seriesName ?? ''),
+      decodeURIComponent(seasonName ?? ''),
+      decodeURIComponent(filename),
     );
 
     if (!existsSync(filePath)) return null;
