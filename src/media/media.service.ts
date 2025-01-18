@@ -155,15 +155,32 @@ export class MediaService {
     }
   }
 
-  async createSeriesJson() {
+  async readJson(
+    mediaType: MediaType,
+  ): Promise<MovieSeries[] | Movies[] | Series[]> {
     try {
-      const json: Series[] = await this.readSeriesDirectory();
+      switch (mediaType) {
+        case MediaType.MOVIE:
+          return this.readMovieDirectory();
+        case MediaType.MOVIE_SERIES:
+          return this.readMovieSeriesDirectory();
+        case MediaType.SERIES:
+          return this.readSeriesDirectory();
+      }
+    } catch (error) {
+      throw new Error(`Failed to read file: ${error}`);
+    }
+  }
+
+  async createJson(mediaType: MediaType) {
+    try {
+      const json = await this.readJson(mediaType);
       await writeFile(
-        this.mediaConfig.getMediaPath(MediaType.SERIES_JSON),
+        this.mediaConfig.getMediaPath(mediaType),
         JSON.stringify(json, null, 2),
       );
     } catch (error) {
-      throw new Error(`Failed to create series.json: ${error}`);
+      throw new Error(`Failed to create file: ${error}`);
     }
   }
 }

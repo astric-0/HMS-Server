@@ -92,11 +92,11 @@ export class MediaController {
     return { series };
   }
 
-  @Get('create-series-json')
-  async createSeriesJson() {
+  @Get('create-json')
+  async createJson(@Query('media_type') mediaType: MediaType) {
     try {
-      await this.mediaService.createSeriesJson();
-      return { message: 'Series directory created' };
+      await this.mediaService.createJson(mediaType);
+      return { message: 'File created' };
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }

@@ -5,6 +5,7 @@ export enum MediaType {
   MOVIE_SERIES = 'movie_series',
   SERIES_JSON = 'series.json',
   MOVIE_SERIES_JSON = 'movie_series.json',
+  MOVIE_JSON = 'movie.json',
 }
 
 export type MediaPaths = {
