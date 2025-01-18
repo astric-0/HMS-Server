@@ -98,6 +98,7 @@ export class MediaService {
           episodes: episodes.map((episode) => ({
             name: episode,
             url: `/media/file/${encodeURIComponent(episode)}?${query}`,
+            type: MediaType.SERIES,
           })),
         };
       });

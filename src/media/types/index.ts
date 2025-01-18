@@ -38,15 +38,12 @@ export interface SeriesDirectory {
   name: string;
   seasons: {
     name: string;
-    episodes: {
-      name: string;
-      url: string;
-    }[];
+    episodes: MovieDirectory[];
   }[];
 }
 
 export interface MovieDirectory {
   name: string;
-  type: MediaType.MOVIE;
+  type: MediaType;
   url: string;
 }
