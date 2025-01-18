@@ -79,13 +79,13 @@ export class MediaService {
       const seasons = await readdir(join(path, sc.name), {
         withFileTypes: true,
       });
-      const series_name = encodeURIComponent(sc.name);
+      const series_name = sc.name;
 
       const seasonPromises = seasons.map(async (season: Dirent) => {
         if (!season.isDirectory()) return null;
 
         const episodes = await readdir(join(path, sc.name, season.name));
-        const season_name = encodeURIComponent(season.name);
+        const season_name = season.name;
 
         const query = new URLSearchParams({
           media_type,
