@@ -1,9 +1,10 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { extname, join } from 'path';
-import { MediaConfig } from './media.config';
-import { MediaType, SeriesDirectory, MovieDirectory } from './types';
-import { existsSync, createReadStream, Dirent } from 'fs';
 import { readdir, writeFile, readFile } from 'fs/promises';
+import { existsSync, createReadStream } from 'fs';
+
+import { MediaConfig } from './media.config';
+import { MediaType, Series, MovieSeries, Movies } from './types';
 
 @Injectable()
 export class MediaService {
@@ -53,70 +54,90 @@ export class MediaService {
     return filePath;
   }
 
-  createReadStream(filePath: string, start: number, end: number) {
+  public createReadStream(filePath: string, start: number, end: number) {
     return createReadStream(filePath, { start, end });
   }
 
-  async readMovieDirectory(): Promise<MovieDirectory[]> {
-    const path = this.mediaConfig.getMediaPath(MediaType.MOVIE);
+  public async readMovieDirectory(
+    path: string = this.mediaConfig.getMediaPath(MediaType.MOVIE),
+    media_type: MediaType = MediaType.MOVIE,
+    query: URLSearchParams = new URLSearchParams({
+      media_type,
+    }),
+  ): Promise<Movies[]> {
     const files = await readdir(path);
 
     return files.map((filename) => ({
       name: filename,
-      type: MediaType.MOVIE,
-      url: `/media/file/${encodeURIComponent(filename)}?media_type=${MediaType.MOVIE}`,
+      type: media_type,
+      url: `/media/file/${encodeURIComponent(filename)}?${query.toString()}`,
     }));
   }
 
-  async readSeriesDirectory(): Promise<SeriesDirectory[]> {
+  async readMovieSeriesDirectory(
+    path: string = this.mediaConfig.getMediaPath(MediaType.MOVIE_SERIES),
+    media_type: MediaType = MediaType.MOVIE_SERIES,
+    query: URLSearchParams = new URLSearchParams({
+      media_type,
+    }),
+  ): Promise<MovieSeries[]> {
+    const files = await readdir(path, { withFileTypes: true });
+
+    query.set('media_type', media_type);
+    return (
+      await Promise.all(
+        files.map(async (dir) => {
+          if (!dir.isDirectory()) return null;
+
+          query.set('series_name', dir.name);
+
+          return {
+            name: dir.name,
+            episodes: await this.readMovieDirectory(
+              join(path, dir.name),
+              media_type,
+              query,
+            ),
+          };
+        }),
+      )
+    ).filter(Boolean);
+  }
+
+  public async readSeriesDirectory(): Promise<Series[]> {
     const path = this.mediaConfig.getMediaPath(MediaType.SERIES);
     const series = await readdir(path, { withFileTypes: true });
     const media_type = MediaType.SERIES;
+    const query = new URLSearchParams({
+      media_type,
+    });
 
     const seriesPromises = series.map(async (sc) => {
       if (!sc.isDirectory()) return null;
+      query.set('series_name', sc.name);
 
-      const seasons = await readdir(join(path, sc.name), {
-        withFileTypes: true,
-      });
-      const series_name = sc.name;
-
-      const seasonPromises = seasons.map(async (season: Dirent) => {
-        if (!season.isDirectory()) return null;
-
-        const episodes = await readdir(join(path, sc.name, season.name));
-        const season_name = season.name;
-
-        const query = new URLSearchParams({
-          media_type,
-          series_name,
-          season_name,
-        }).toString();
-
-        return {
-          name: season.name,
-          episodes: episodes.map((episode) => ({
-            name: episode,
-            url: `/media/file/${encodeURIComponent(episode)}?${query}`,
-            type: MediaType.SERIES,
-          })),
-        };
-      });
-
-      const resolvedSeasons = (await Promise.all(seasonPromises)).filter(
-        Boolean,
+      const movieSeries = await this.readMovieSeriesDirectory(
+        join(path, sc.name),
+        media_type,
+        query,
       );
 
       return {
         name: sc.name,
-        seasons: resolvedSeasons,
+        seasons: movieSeries,
       };
     });
 
     return (await Promise.all(seriesPromises)).filter(Boolean);
   }
 
-  async getSeriesJson(): Promise<SeriesDirectory[]> {
+  public readMoviesDirectory(
+    path: string = this.mediaConfig.getMediaPath(MediaType.MOVIE_SERIES),
+  ): Promise<MovieSeries[]> {
+    return this.readMovieSeriesDirectory(path);
+  }
+
+  async getSeriesJson(): Promise<Series[]> {
     try {
       const path = this.mediaConfig.getMediaPath(MediaType.SERIES_JSON);
       const json = await readFile(path, 'utf-8');
@@ -126,9 +147,21 @@ export class MediaService {
     }
   }
 
+  async createMovieSeriesJson() {
+    try {
+      const json: MovieSeries[] = await this.readMovieSeriesDirectory();
+      await writeFile(
+        this.mediaConfig.getMediaPath(MediaType.MOVIE_SERIES_JSON),
+        JSON.stringify(json, null, 2),
+      );
+    } catch (error) {
+      throw new Error(`Failed to create movie series.json: ${error}`);
+    }
+  }
+
   async createSeriesJson() {
     try {
-      const json: SeriesDirectory[] = await this.readSeriesDirectory();
+      const json: Series[] = await this.readSeriesDirectory();
       await writeFile(
         this.mediaConfig.getMediaPath(MediaType.SERIES_JSON),
         JSON.stringify(json, null, 2),
