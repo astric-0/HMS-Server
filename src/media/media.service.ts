@@ -127,12 +127,6 @@ export class MediaService {
     return (await Promise.all(seriesPromises)).filter(Boolean);
   }
 
-  public readMoviesDirectory(
-    path: string = this.mediaConfig.getMediaPath(MediaType.MOVIE_SERIES),
-  ): Promise<MovieSeries[]> {
-    return this.readMovieSeriesDirectory(path);
-  }
-
   async getSeriesJson(): Promise<Series[]> {
     try {
       const path = this.mediaConfig.getMediaPath(MediaType.SERIES_JSON);
@@ -157,26 +151,29 @@ export class MediaService {
 
   async readJson(
     mediaType: MediaType,
-  ): Promise<MovieSeries[] | Movies[] | Series[]> {
+  ): Promise<[MovieSeries[] | Movies[] | Series[], MediaType]> {
     try {
       switch (mediaType) {
-        case MediaType.MOVIE:
-          return this.readMovieDirectory();
         case MediaType.MOVIE_SERIES:
-          return this.readMovieSeriesDirectory();
+          return [
+            await this.readMovieSeriesDirectory(),
+            MediaType.MOVIE_SERIES_JSON,
+          ];
+        case MediaType.MOVIE:
+          return [await this.readMovieDirectory(), MediaType.MOVIE_JSON];
         case MediaType.SERIES:
-          return this.readSeriesDirectory();
+          return [await this.readSeriesDirectory(), MediaType.SERIES_JSON];
       }
     } catch (error) {
-      throw new Error(`Failed to read file: ${error}`);
+      throw new Error(`Failed to read directory: ${error}`);
     }
   }
 
   async createJson(mediaType: MediaType) {
     try {
-      const json = await this.readJson(mediaType);
+      const [json, jsonMediaType] = await this.readJson(mediaType);
       await writeFile(
-        this.mediaConfig.getMediaPath(mediaType),
+        this.mediaConfig.getMediaPath(jsonMediaType),
         JSON.stringify(json, null, 2),
       );
     } catch (error) {
