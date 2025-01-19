@@ -82,14 +82,22 @@ export class MediaController {
 
   @Get('movies/list')
   async getMovieList() {
-    const movies = await this.mediaService.readMovieDirectory();
+    const movies = await this.mediaService.getJson(MediaType.MOVIE_JSON);
     return { movies };
   }
 
   @Get('series/list')
   async getSeriesList() {
-    const series = await this.mediaService.getSeriesJson();
+    const series = await this.mediaService.getJson(MediaType.SERIES_JSON);
     return { series };
+  }
+
+  @Get('movie-series/list')
+  async getMovieSeriesList() {
+    const movieSeries = await this.mediaService.getJson(
+      MediaType.MOVIE_SERIES_JSON,
+    );
+    return { movieSeries };
   }
 
   @Get('create-json')

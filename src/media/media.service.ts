@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { extname, join } from 'path';
+import { join } from 'path';
 import { readdir, writeFile, readFile } from 'fs/promises';
 import { existsSync, createReadStream } from 'fs';
 
@@ -12,25 +12,6 @@ export class MediaService {
     @Inject(MediaConfig)
     private readonly mediaConfig: MediaConfig,
   ) {}
-
-  public getMimeType(filePath: string): string {
-    const ext = extname(filePath).toLowerCase();
-    const mimeTypes = {
-      '.mp4': 'video/mp4',
-      '.webm': 'video/webm',
-      '.ogg': 'video/ogg',
-      '.mov': 'video/quicktime',
-      '.mkv': 'video/x-matroska',
-      '.avi': 'video/x-msvideo',
-      '.mp3': 'audio/mpeg',
-      '.wav': 'audio/wav',
-      '.jpg': 'image/jpeg',
-      '.jpeg': 'image/jpeg',
-      '.png': 'image/png',
-      '.gif': 'image/gif',
-    };
-    return mimeTypes[ext] || 'application/octet-stream';
-  }
 
   public getMediaFilePath(
     filename: string,
@@ -127,13 +108,15 @@ export class MediaService {
     return (await Promise.all(seriesPromises)).filter(Boolean);
   }
 
-  async getSeriesJson(): Promise<Series[]> {
+  public async getJson(
+    mediaType: MediaType,
+  ): Promise<Movies[] | MovieSeries[] | Series[]> {
     try {
-      const path = this.mediaConfig.getMediaPath(MediaType.SERIES_JSON);
+      const path = this.mediaConfig.getMediaPath(mediaType);
       const json = await readFile(path, 'utf-8');
       return JSON.parse(json);
     } catch (error) {
-      throw new Error(`Failed to read series.json: ${error}`);
+      throw new Error(`Failed to get json file: ${error}`);
     }
   }
 
