@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Post,
   Res,
   Req,
   Param,
@@ -8,6 +9,7 @@ import {
   Query,
   NotFoundException,
   Inject,
+  Body,
 } from '@nestjs/common';
 import { statSync } from 'fs';
 import { Response, Request } from 'express';
@@ -100,8 +102,8 @@ export class MediaController {
     return { movieSeries };
   }
 
-  @Get('create-json')
-  async createJson(@Query('media_type') mediaType: MediaType) {
+  @Post('json')
+  async createJson(@Body('media_type') mediaType: MediaType) {
     try {
       await this.mediaService.createJson(mediaType);
       return { message: 'File created' };
