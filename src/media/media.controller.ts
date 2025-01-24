@@ -10,10 +10,12 @@ import {
   NotFoundException,
   Inject,
   Body,
+  BadRequestException,
 } from '@nestjs/common';
 import { statSync } from 'fs';
 import { Response, Request } from 'express';
-import { MediaType } from './types';
+
+import { Downloadable, MediaType } from './media.types';
 import { MediaService } from './media.service';
 
 @Controller('media')
@@ -99,6 +101,7 @@ export class MediaController {
     const movieSeries = await this.mediaService.getJson(
       MediaType.MOVIE_SERIES_JSON,
     );
+
     return { movieSeries };
   }
 
@@ -106,9 +109,27 @@ export class MediaController {
   async createJson(@Body('media_type') mediaType: MediaType) {
     try {
       await this.mediaService.createJson(mediaType);
+
       return { message: 'File created' };
     } catch (error) {
       throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  @Post('download')
+  async downloadMedia(@Body() download: Omit<Downloadable, 'filePath'>) {
+    try {
+      const result = await this.mediaService.addToMediaQueue(download);
+
+      if (!result) {
+        throw new BadRequestException('Invalid Values');
+      }
+
+      return { message: 'File added to queue for download' };
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Some error occured ${error.message}`,
+      );
     }
   }
 }

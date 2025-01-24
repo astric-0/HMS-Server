@@ -2,6 +2,7 @@ export enum MediaType {
   MEDIA = 'media',
   MOVIE = 'movie',
   SERIES = 'series',
+  DOWNLOADS = 'default_download',
   MOVIE_SERIES = 'movie_series',
   SERIES_JSON = 'series.json',
   MOVIE_SERIES_JSON = 'movie_series.json',
@@ -50,4 +51,11 @@ export interface Movies {
   name: string;
   type: MediaType;
   url: string;
+}
+
+export interface Downloadable {
+  url: string;
+  type: MediaType;
+  filename: string;
+  filePath: string;
 }

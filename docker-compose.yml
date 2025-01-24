@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  media-server:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - ./media:/app/media
+      - ./.env:/app/.env
+    environment:
+      - NODE_ENV=production
+      - HOST=0.0.0.0
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - redis
+    restart: unless-stopped 
+  
+  redis: 
+    image: redis:latest
+    container_name: redis
+    ports:
+      - '6379:6379'

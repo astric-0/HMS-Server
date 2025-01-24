@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { MediaType, MediaPaths } from './types';
+import { MediaType, MediaPaths } from './media.types';
 
 @Injectable()
 export class MediaConfig {
@@ -8,15 +8,16 @@ export class MediaConfig {
 
   public constructor(private readonly configService: ConfigService) {
     this.mediaPaths = {
-      [MediaType.MEDIA]: configService.get('MEDIA_DIR'),
-      [MediaType.MOVIE]: configService.get('MOVIE_DIR'),
-      [MediaType.SERIES]: configService.get('SERIES_DIR'),
-      [MediaType.MOVIE_SERIES]: configService.get('MOVIE_SERIES_DIR'),
-      [MediaType.MOVIE_JSON]: configService.get('MOVIE_JSON_PATH'),
-      [MediaType.MOVIE_SERIES_JSON]: configService.get(
+      [MediaType.MEDIA]: this.configService.get('MEDIA_DIR'),
+      [MediaType.MOVIE]: this.configService.get('MOVIE_DIR'),
+      [MediaType.SERIES]: this.configService.get('SERIES_DIR'),
+      [MediaType.MOVIE_SERIES]: this.configService.get('MOVIE_SERIES_DIR'),
+      [MediaType.MOVIE_JSON]: this.configService.get('MOVIE_JSON_PATH'),
+      [MediaType.MOVIE_SERIES_JSON]: this.configService.get(
         'MOVIE_SERIES_JSON_PATH',
       ),
-      [MediaType.SERIES_JSON]: configService.get('SERIES_JSON_PATH'),
+      [MediaType.SERIES_JSON]: this.configService.get('SERIES_JSON_PATH'),
+      [MediaType.DOWNLOADS]: this.configService.get('DEFAULT_DOWNLOAD_DIR'),
     };
   }
 

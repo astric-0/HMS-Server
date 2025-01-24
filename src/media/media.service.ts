@@ -2,15 +2,26 @@ import { Injectable, Inject } from '@nestjs/common';
 import { join } from 'path';
 import { readdir, writeFile, readFile } from 'fs/promises';
 import { existsSync, createReadStream } from 'fs';
+import { Queue } from 'bullmq';
+import { InjectQueue } from '@nestjs/bullmq';
 
 import { MediaConfig } from './media.config';
-import { MediaType, Series, MovieSeries, Movies } from './types';
+import {
+  MediaType,
+  Series,
+  MovieSeries,
+  Movies,
+  Downloadable,
+} from './media.types';
+import { QUEUE_NAMES, JOBS_NAMES } from './media.constants';
 
 @Injectable()
 export class MediaService {
   constructor(
     @Inject(MediaConfig)
     private readonly mediaConfig: MediaConfig,
+    @InjectQueue(QUEUE_NAMES.MEDIA_QUEUE)
+    private readonly mediaQueue: Queue,
   ) {}
 
   public getMediaFilePath(
@@ -18,6 +29,7 @@ export class MediaService {
     type: MediaType,
     seriesName?: string,
     seasonName?: string,
+    ignoreNotFound: boolean = false,
   ): string | null {
     const mediaPath = this.mediaConfig.getMediaPath(type);
     const filePath = join(
@@ -30,7 +42,7 @@ export class MediaService {
       decodeURIComponent(filename),
     );
 
-    if (!existsSync(filePath)) return null;
+    if (!existsSync(filePath) && !ignoreNotFound) return null;
 
     return filePath;
   }
@@ -162,5 +174,32 @@ export class MediaService {
     } catch (error) {
       throw new Error(`Failed to create file: ${error}`);
     }
+  }
+
+  async addToMediaQueue(
+    download: Omit<Downloadable, 'filePath'>,
+  ): Promise<boolean> {
+    try {
+      new URL(download.url);
+    } catch {
+      return false;
+    }
+
+    const filePath = this.getMediaFilePath(
+      download.filename,
+      MediaType.DOWNLOADS,
+      '',
+      '',
+      true,
+    );
+
+    const fileToDownload: Downloadable = { ...download, filePath };
+
+    const job = await this.mediaQueue.add(
+      JOBS_NAMES.DOWNLOAD_MEDIA,
+      fileToDownload,
+    );
+
+    return !!job;
   }
 }
