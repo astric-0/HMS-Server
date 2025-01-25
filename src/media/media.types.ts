@@ -69,3 +69,10 @@ export interface MediaJob<T> {
   finishedOn?: number;
   processedOn?: number;
 }
+
+export interface DownloadJobs {
+  active: MediaJob<DownloadJobs>[];
+  completed: MediaJob<DownloadJobs>[];
+  waiting: MediaJob<DownloadJobs>[];
+  failed: MediaJob<DownloadJobs>[];
+}

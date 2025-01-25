@@ -2,7 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { join } from 'path';
 import { readdir, writeFile, readFile } from 'fs/promises';
 import { existsSync, createReadStream } from 'fs';
-import { Job, JobType, Queue } from 'bullmq';
+import { Job, Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
 
 import { MediaConfig } from './media.config';
@@ -13,6 +13,7 @@ import {
   Movies,
   Downloadable,
   MediaJob,
+  DownloadJobs,
 } from './media.types';
 import { QUEUE_NAMES, JOBS_NAMES } from './media.constants';
 
@@ -204,10 +205,8 @@ export class MediaService {
     return !!job;
   }
 
-  public async getDownloadJobs(jobType?: JobType) {
-    const jobs: Job<Downloadable>[] = await this.mediaQueue.getJobs(jobType);
-
-    const mediaJobs = jobs.map((x): MediaJob<Downloadable> => {
+  private convertJob(jobs: Job<Downloadable>[]): MediaJob<Downloadable>[] {
+    return jobs.map((x): MediaJob<Downloadable> => {
       const {
         id,
         progress,
@@ -228,7 +227,26 @@ export class MediaService {
         finishedOn,
       };
     });
+  }
 
-    return mediaJobs;
+  public async getDownloadJobs(): Promise<DownloadJobs> {
+    const [waiting, active, completed, failed]: [
+      MediaJob<DownloadJobs>[],
+      MediaJob<DownloadJobs>[],
+      MediaJob<DownloadJobs>[],
+      MediaJob<DownloadJobs>[],
+    ] = await Promise.all([
+      this.mediaQueue.getWaiting(),
+      this.mediaQueue.getActive(),
+      this.mediaQueue.getCompleted(),
+      this.mediaQueue.getFailed(),
+    ]);
+
+    return {
+      active,
+      waiting,
+      completed,
+      failed,
+    };
   }
 }

@@ -17,7 +17,6 @@ import { Response, Request } from 'express';
 
 import { Downloadable, MediaType } from './media.types';
 import { MediaService } from './media.service';
-import { JobType } from 'bullmq';
 
 @Controller('media')
 export class MediaController {
@@ -117,9 +116,9 @@ export class MediaController {
     }
   }
 
-  @Get('downloads/:state?')
-  async getDownloads(@Param('state') state?: JobType) {
-    const jobs = this.mediaService.getDownloadJobs(state);
+  @Get('downloads/')
+  async getDownloads() {
+    const jobs = await this.mediaService.getDownloadJobs();
     return { jobs };
   }
 
