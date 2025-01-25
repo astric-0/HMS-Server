@@ -208,8 +208,18 @@ export class MediaService {
     const jobs: Job<Downloadable>[] = await this.mediaQueue.getJobs(jobType);
 
     const mediaJobs = jobs.map((x): MediaJob<Downloadable> => {
-      const { progress, name, data, failedReason, processedOn, finishedOn } = x;
+      const {
+        id,
+        progress,
+        name,
+        data,
+        failedReason,
+        processedOn,
+        finishedOn,
+      } = x;
+
       return {
+        id,
         progress: progress as number,
         name,
         data,

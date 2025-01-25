@@ -61,6 +61,7 @@ export interface Downloadable {
 }
 
 export interface MediaJob<T> {
+  id?: string;
   name: string;
   data: T;
   progress: number;
