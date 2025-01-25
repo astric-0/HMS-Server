@@ -2,7 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { join } from 'path';
 import { readdir, writeFile, readFile } from 'fs/promises';
 import { existsSync, createReadStream } from 'fs';
-import { Queue } from 'bullmq';
+import { Job, JobType, Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
 
 import { MediaConfig } from './media.config';
@@ -12,6 +12,7 @@ import {
   MovieSeries,
   Movies,
   Downloadable,
+  MediaJob,
 } from './media.types';
 import { QUEUE_NAMES, JOBS_NAMES } from './media.constants';
 
@@ -132,7 +133,7 @@ export class MediaService {
     }
   }
 
-  async createMovieSeriesJson() {
+  public async createMovieSeriesJson() {
     try {
       const json: MovieSeries[] = await this.readMovieSeriesDirectory();
       await writeFile(
@@ -144,7 +145,7 @@ export class MediaService {
     }
   }
 
-  async readJson(
+  public async readJson(
     mediaType: MediaType,
   ): Promise<[MovieSeries[] | Movies[] | Series[], MediaType]> {
     try {
@@ -164,7 +165,7 @@ export class MediaService {
     }
   }
 
-  async createJson(mediaType: MediaType) {
+  public async createJson(mediaType: MediaType) {
     try {
       const [json, jsonMediaType] = await this.readJson(mediaType);
       await writeFile(
@@ -176,7 +177,7 @@ export class MediaService {
     }
   }
 
-  async addToMediaQueue(
+  public async addToMediaQueue(
     download: Omit<Downloadable, 'filePath'>,
   ): Promise<boolean> {
     try {
@@ -201,5 +202,23 @@ export class MediaService {
     );
 
     return !!job;
+  }
+
+  public async getDownloadJobs(jobType?: JobType) {
+    const jobs: Job<Downloadable>[] = await this.mediaQueue.getJobs(jobType);
+
+    const mediaJobs = jobs.map((x): MediaJob<Downloadable> => {
+      const { progress, name, data, failedReason, processedOn, finishedOn } = x;
+      return {
+        progress: progress as number,
+        name,
+        data,
+        failedReason,
+        processedOn,
+        finishedOn,
+      };
+    });
+
+    return mediaJobs;
   }
 }

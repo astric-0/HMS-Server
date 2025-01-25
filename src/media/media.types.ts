@@ -59,3 +59,12 @@ export interface Downloadable {
   filename: string;
   filePath: string;
 }
+
+export interface MediaJob<T> {
+  name: string;
+  data: T;
+  progress: number;
+  failedReason?: string;
+  finishedOn?: number;
+  processedOn?: number;
+}
