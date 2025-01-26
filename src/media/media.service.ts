@@ -231,10 +231,10 @@ export class MediaService {
 
   public async getDownloadJobs(): Promise<DownloadJobs> {
     const [waiting, active, completed, failed]: [
-      MediaJob<DownloadJobs>[],
-      MediaJob<DownloadJobs>[],
-      MediaJob<DownloadJobs>[],
-      MediaJob<DownloadJobs>[],
+      Job<Downloadable>[],
+      Job<Downloadable>[],
+      Job<Downloadable>[],
+      Job<Downloadable>[],
     ] = await Promise.all([
       this.mediaQueue.getWaiting(),
       this.mediaQueue.getActive(),
@@ -243,10 +243,10 @@ export class MediaService {
     ]);
 
     return {
-      active,
-      waiting,
-      completed,
-      failed,
+      active: this.convertJob(active),
+      waiting: this.convertJob(waiting),
+      completed: this.convertJob(completed),
+      failed: this.convertJob(failed),
     };
   }
 }

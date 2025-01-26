@@ -71,8 +71,8 @@ export interface MediaJob<T> {
 }
 
 export interface DownloadJobs {
-  active: MediaJob<DownloadJobs>[];
-  completed: MediaJob<DownloadJobs>[];
-  waiting: MediaJob<DownloadJobs>[];
-  failed: MediaJob<DownloadJobs>[];
+  active: MediaJob<Downloadable>[];
+  completed: MediaJob<Downloadable>[];
+  waiting: MediaJob<Downloadable>[];
+  failed: MediaJob<Downloadable>[];
 }

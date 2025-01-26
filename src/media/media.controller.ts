@@ -116,7 +116,7 @@ export class MediaController {
     }
   }
 
-  @Get('downloads/')
+  @Get('downloads')
   async getDownloads() {
     const jobs = await this.mediaService.getDownloadJobs();
     return { jobs };
