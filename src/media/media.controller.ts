@@ -15,7 +15,7 @@ import {
 import { statSync } from 'fs';
 import { Response, Request } from 'express';
 
-import { Downloadable, MediaType } from './media.types';
+import { Downloadable, MediaType, StorageInfo, File } from './media.types';
 import { MediaService } from './media.service';
 
 @Controller('media')
@@ -107,8 +107,12 @@ export class MediaController {
 
   @Get('downloads/list')
   async getDownloadDirContents() {
-    const files = await this.mediaService.getJson(MediaType.DOWNLOADS_JSON);
-    return { files };
+    const [storageInfo, files]: [StorageInfo, File[]] = await Promise.all([
+      this.mediaService.getStorageInfo(),
+      this.mediaService.getJson(MediaType.DOWNLOADS_JSON) as Promise<File[]>,
+    ]);
+
+    return { files, storageInfo };
   }
 
   @Post('json')

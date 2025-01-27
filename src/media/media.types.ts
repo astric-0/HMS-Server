@@ -85,3 +85,11 @@ export interface File {
   extension: string;
   path: string;
 }
+
+export interface StorageInfo {
+  total: number;
+  used: number;
+  available: number;
+  usedByDownloads: number;
+  disk: string;
+}

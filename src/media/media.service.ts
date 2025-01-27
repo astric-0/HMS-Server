@@ -1,9 +1,10 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { extname, join } from 'path';
+import { extname, join, parse } from 'path';
 import { readdir, writeFile, readFile, stat } from 'fs/promises';
 import { existsSync, createReadStream, Dirent } from 'fs';
 import { Job, Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
+import { getDiskInfo } from 'node-disk-info';
 
 import { MediaConfig } from './media.config';
 import {
@@ -15,6 +16,7 @@ import {
   MediaJob,
   DownloadJobs,
   File,
+  StorageInfo,
 } from './media.types';
 import { QUEUE_NAMES, JOBS_NAMES } from './media.constants';
 
@@ -274,6 +276,22 @@ export class MediaService {
       waiting: this.convertJob(waiting),
       completed: this.convertJob(completed),
       failed: this.convertJob(failed),
+    };
+  }
+
+  public async getStorageInfo(): Promise<StorageInfo> {
+    const disks = await getDiskInfo();
+    const currentRoot = parse(process.cwd()).root;
+    const currentDisk = disks.find((disk) => disk.mounted == currentRoot);
+
+    const info = await stat(this.mediaConfig.getMediaPath(MediaType.DOWNLOADS));
+
+    return {
+      disk: currentDisk.mounted,
+      available: currentDisk.available,
+      used: currentDisk.blocks - currentDisk.available,
+      total: currentDisk.blocks,
+      usedByDownloads: info.size,
     };
   }
 }
