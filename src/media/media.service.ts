@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { join } from 'path';
-import { readdir, writeFile, readFile } from 'fs/promises';
-import { existsSync, createReadStream } from 'fs';
+import { extname, join } from 'path';
+import { readdir, writeFile, readFile, stat } from 'fs/promises';
+import { existsSync, createReadStream, Dirent } from 'fs';
 import { Job, Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
 
@@ -14,6 +14,7 @@ import {
   Downloadable,
   MediaJob,
   DownloadJobs,
+  File,
 } from './media.types';
 import { QUEUE_NAMES, JOBS_NAMES } from './media.constants';
 
@@ -122,6 +123,27 @@ export class MediaService {
     return (await Promise.all(seriesPromises)).filter(Boolean);
   }
 
+  public async readDownloadsDirectory(): Promise<File[]> {
+    const path = this.mediaConfig.getMediaPath(MediaType.DOWNLOADS);
+    const files = await readdir(path, { withFileTypes: true });
+
+    const data: File[] = await Promise.all(
+      files.map(async (file: Dirent): Promise<File> => {
+        const filePath = join(path, file.name);
+        const fileStat = await stat(filePath);
+        return {
+          isDir: file.isDirectory(),
+          name: file.name,
+          size: fileStat.size,
+          path: filePath,
+          extension: extname(file.name),
+        };
+      }),
+    );
+
+    return data;
+  }
+
   public async getJson(
     mediaType: MediaType,
   ): Promise<Movies[] | MovieSeries[] | Series[]> {
@@ -148,7 +170,7 @@ export class MediaService {
 
   public async readJson(
     mediaType: MediaType,
-  ): Promise<[MovieSeries[] | Movies[] | Series[], MediaType]> {
+  ): Promise<[MovieSeries[] | Movies[] | Series[] | File[], MediaType]> {
     try {
       switch (mediaType) {
         case MediaType.MOVIE_SERIES:
@@ -160,6 +182,11 @@ export class MediaService {
           return [await this.readMovieDirectory(), MediaType.MOVIE_JSON];
         case MediaType.SERIES:
           return [await this.readSeriesDirectory(), MediaType.SERIES_JSON];
+        case MediaType.DOWNLOADS:
+          return [
+            await this.readDownloadsDirectory(),
+            MediaType.DOWNLOADS_JSON,
+          ];
       }
     } catch (error) {
       throw new Error(`Failed to read directory: ${error}`);

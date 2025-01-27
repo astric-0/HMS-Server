@@ -2,10 +2,11 @@ export enum MediaType {
   MEDIA = 'media',
   MOVIE = 'movie',
   SERIES = 'series',
-  DOWNLOADS = 'default_download',
+  DOWNLOADS = 'default_downloads',
   MOVIE_SERIES = 'movie_series',
   SERIES_JSON = 'series.json',
   MOVIE_SERIES_JSON = 'movie_series.json',
+  DOWNLOADS_JSON = 'downloads.json',
   MOVIE_JSON = 'movie.json',
 }
 
@@ -75,4 +76,12 @@ export interface DownloadJobs {
   completed: MediaJob<Downloadable>[];
   waiting: MediaJob<Downloadable>[];
   failed: MediaJob<Downloadable>[];
+}
+
+export interface File {
+  name: string;
+  size: number;
+  isDir: boolean;
+  extension: string;
+  path: string;
 }

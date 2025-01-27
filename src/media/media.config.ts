@@ -18,6 +18,9 @@ export class MediaConfig {
       ),
       [MediaType.SERIES_JSON]: this.configService.get('SERIES_JSON_PATH'),
       [MediaType.DOWNLOADS]: this.configService.get('DEFAULT_DOWNLOAD_DIR'),
+      [MediaType.DOWNLOADS_JSON]: this.configService.get(
+        'DEFAULT_DOWNLOAD_JSON_PATH',
+      ),
     };
   }
 
