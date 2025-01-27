@@ -146,7 +146,7 @@ export class MediaService {
 
   public async getJson(
     mediaType: MediaType,
-  ): Promise<Movies[] | MovieSeries[] | Series[]> {
+  ): Promise<Movies[] | MovieSeries[] | Series[] | File[]> {
     try {
       const path = this.mediaConfig.getMediaPath(mediaType);
       const json = await readFile(path, 'utf-8');

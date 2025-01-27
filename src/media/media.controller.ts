@@ -105,6 +105,12 @@ export class MediaController {
     return { movieSeries };
   }
 
+  @Get('downloads/list')
+  async getDownloadDirContents() {
+    const files = await this.mediaService.getJson(MediaType.DOWNLOADS_JSON);
+    return { files };
+  }
+
   @Post('json')
   async createJson(@Body('media_type') mediaType: MediaType) {
     try {
@@ -116,13 +122,13 @@ export class MediaController {
     }
   }
 
-  @Get('downloads')
+  @Get('downloads-jobs')
   async getDownloads() {
     const jobs = await this.mediaService.getDownloadJobs();
     return { jobs };
   }
 
-  @Post('download')
+  @Post('download-jobs')
   async downloadMedia(@Body() download: Omit<Downloadable, 'filePath'>) {
     try {
       const result = await this.mediaService.addToMediaQueue(download);
