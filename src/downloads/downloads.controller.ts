@@ -6,9 +6,10 @@ import {
   Get,
   Inject,
   InternalServerErrorException,
+  Patch,
   Post,
 } from '@nestjs/common';
-import { Downloadable, File, StorageInfo } from './downloads.types';
+import { Action, Downloadable, File, StorageInfo } from './downloads.types';
 import { DownloadsService } from './downloads.service';
 
 @Controller('downloads')
@@ -34,6 +35,12 @@ export class DownloadsController {
     } catch (error) {
       throw new InternalServerErrorException({ error: error.message });
     }
+  }
+
+  @Patch(':filename/move')
+  async performMoveAction(@Body() action: Action) {
+    const result = await this.downloadsService.performMoveAction(action);
+    if (!result) throw new BadRequestException({ message: 'Invalid values' });
   }
 
   @Post('jobs')

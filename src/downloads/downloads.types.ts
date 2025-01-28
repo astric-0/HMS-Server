@@ -49,3 +49,21 @@ export interface StorageInfo {
   usedByDownloads: number;
   disk: string;
 }
+
+export enum ActionType {
+  MOVE = 'move',
+}
+
+export type ManagedDirectories =
+  | MediaType.MOVIE
+  | MediaType.MOVIE_SERIES
+  | MediaType.SERIES;
+
+export interface Action {
+  actionType: ActionType;
+  file: File;
+  destinationInfo: {
+    moveTo: ManagedDirectories;
+    path: string[];
+  };
+}

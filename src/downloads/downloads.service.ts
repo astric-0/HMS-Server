@@ -14,7 +14,10 @@ import {
   MediaJob,
   StorageInfo,
   File,
+  Action,
 } from './downloads.types';
+import { getDestionationPath } from './downloads.helpers/getDestionationPath';
+import { moveFile } from './downloads.helpers/moveFile';
 
 @Injectable()
 export class DownloadsService {
@@ -112,6 +115,21 @@ export class DownloadsService {
   public async deleteFile(file: File): Promise<boolean> {
     const path = this.mediaConfig.getPath(MediaType.DOWNLOADS, file.name);
     await unlink(path);
+    return true;
+  }
+
+  public async performMoveAction({
+    file,
+    destinationInfo,
+  }: Action): Promise<boolean> {
+    const source = this.mediaConfig.getPath(MediaType.DOWNLOADS, file.name);
+
+    const [isValid, path] = getDestionationPath(destinationInfo);
+    if (!isValid) return false;
+
+    const destination = this.mediaConfig.getPath(destinationInfo.moveTo, path);
+
+    await moveFile(source, destination, file.name);
     return true;
   }
 }
