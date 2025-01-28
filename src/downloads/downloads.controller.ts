@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Inject,
   InternalServerErrorException,
@@ -14,7 +15,7 @@ import { DownloadsService } from './downloads.service';
 export class DownloadsController {
   constructor(@Inject() private readonly downloadsService: DownloadsService) {}
 
-  @Get('list')
+  @Get()
   async getDownloadDirContents() {
     const [storageInfo, files]: [StorageInfo, File[]] = await Promise.all([
       this.downloadsService.getStorageInfo(),
@@ -22,6 +23,17 @@ export class DownloadsController {
     ]);
 
     return { files, storageInfo };
+  }
+
+  @Delete()
+  async deleteFile(@Body() file: File) {
+    if (!file.name) throw new BadRequestException('Invalid file name');
+    try {
+      this.downloadsService.deleteFile(file);
+      return { message: 'File removed successfully' };
+    } catch (error) {
+      throw new InternalServerErrorException({ error: error.message });
+    }
   }
 
   @Post('jobs')

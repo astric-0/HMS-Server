@@ -3,7 +3,7 @@ import { parse } from 'path/posix';
 import { Inject, Injectable } from '@nestjs/common';
 import { join } from 'path';
 import { Job, Queue } from 'bullmq';
-import { stat } from 'fs/promises';
+import { stat, unlink } from 'fs/promises';
 import { getDiskInfo } from 'node-disk-info';
 import { MediaConfig } from 'src/media/media.config';
 import { JOBS_NAMES, QUEUE_NAMES } from 'src/common/constants';
@@ -107,5 +107,11 @@ export class DownloadsService {
       total: currentDisk.blocks,
       usedByDownloads: info.size,
     };
+  }
+
+  public async deleteFile(file: File): Promise<boolean> {
+    const path = this.mediaConfig.getPath(MediaType.DOWNLOADS, file.name);
+    await unlink(path);
+    return true;
   }
 }
