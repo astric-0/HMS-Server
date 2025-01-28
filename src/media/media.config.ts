@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { MediaType, MediaPaths } from './media.types';
+import { readFile } from 'fs/promises';
+import { join } from 'path/posix';
+import { MediaType, MediaPaths } from 'src/common/types';
 
 @Injectable()
 export class MediaConfig {
@@ -26,5 +28,20 @@ export class MediaConfig {
 
   public getMediaPath(type: MediaType) {
     return this.mediaPaths[type];
+  }
+
+  public async getJson<T>(mediaType: MediaType): Promise<T> {
+    try {
+      const path = this.getMediaPath(mediaType);
+      const json = await readFile(path, 'utf-8');
+      return JSON.parse(json) as T;
+    } catch (error) {
+      throw new Error(`Failed to get json file: ${error}`);
+    }
+  }
+
+  public getPath(type: MediaType, ...pathArgs: string[]): string {
+    const mediaPath = this.getMediaPath(type);
+    return join(__dirname, '..', '..', mediaPath, ...pathArgs);
   }
 }

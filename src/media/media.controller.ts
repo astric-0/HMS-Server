@@ -10,13 +10,12 @@ import {
   NotFoundException,
   Inject,
   Body,
-  BadRequestException,
 } from '@nestjs/common';
 import { statSync } from 'fs';
 import { Response, Request } from 'express';
 
-import { Downloadable, MediaType, StorageInfo, File } from './media.types';
 import { MediaService } from './media.service';
+import { MediaType } from 'src/common/types';
 
 @Controller('media')
 export class MediaController {
@@ -105,16 +104,6 @@ export class MediaController {
     return { movieSeries };
   }
 
-  @Get('downloads/list')
-  async getDownloadDirContents() {
-    const [storageInfo, files]: [StorageInfo, File[]] = await Promise.all([
-      this.mediaService.getStorageInfo(),
-      this.mediaService.getJson(MediaType.DOWNLOADS_JSON) as Promise<File[]>,
-    ]);
-
-    return { files, storageInfo };
-  }
-
   @Post('json')
   async createJson(@Body('media_type') mediaType: MediaType) {
     try {
@@ -123,29 +112,6 @@ export class MediaController {
       return { message: 'File created' };
     } catch (error) {
       throw new InternalServerErrorException(error.message);
-    }
-  }
-
-  @Get('download-jobs')
-  async getDownloads() {
-    const jobs = await this.mediaService.getDownloadJobs();
-    return { jobs };
-  }
-
-  @Post('download-jobs')
-  async downloadMedia(@Body() download: Omit<Downloadable, 'filePath'>) {
-    try {
-      const result = await this.mediaService.addToMediaQueue(download);
-
-      if (!result) {
-        throw new BadRequestException('Invalid Values');
-      }
-
-      return { message: 'File added to queue for download' };
-    } catch (error) {
-      throw new InternalServerErrorException(
-        `Some error occured ${error.message}`,
-      );
     }
   }
 }

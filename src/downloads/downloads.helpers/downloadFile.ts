@@ -2,14 +2,13 @@ import { Job } from 'bullmq';
 import { unlinkSync, createWriteStream, mkdirSync } from 'fs';
 import * as https from 'https';
 import { dirname } from 'path';
-import { Downloadable } from '../media.types';
+import { Downloadable } from '../downloads.types';
 
 export async function downloadMedia(job: Job<Downloadable>): Promise<boolean> {
   return new Promise((resolve, reject) => {
     const { url, filePath } = job.data;
 
     try {
-      // Ensure parent directory exists
       mkdirSync(dirname(filePath), { recursive: true });
     } catch (error) {
       return reject(`Failed to create directories for ${filePath}: ${error}`);

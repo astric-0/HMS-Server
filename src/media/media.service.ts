@@ -1,32 +1,17 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { extname, join, parse } from 'path';
-import { readdir, writeFile, readFile, stat } from 'fs/promises';
+import { extname, join } from 'path';
+import { readdir, writeFile, stat } from 'fs/promises';
 import { existsSync, createReadStream, Dirent } from 'fs';
-import { Job, Queue } from 'bullmq';
-import { InjectQueue } from '@nestjs/bullmq';
-import { getDiskInfo } from 'node-disk-info';
-
+import { File } from 'src/downloads/downloads.types';
 import { MediaConfig } from './media.config';
-import {
-  MediaType,
-  Series,
-  MovieSeries,
-  Movies,
-  Downloadable,
-  MediaJob,
-  DownloadJobs,
-  File,
-  StorageInfo,
-} from './media.types';
-import { QUEUE_NAMES, JOBS_NAMES } from './media.constants';
+import { Series, MovieSeries, Movies } from './media.types';
+import { MediaType } from 'src/common/types';
 
 @Injectable()
 export class MediaService {
   constructor(
     @Inject(MediaConfig)
     private readonly mediaConfig: MediaConfig,
-    @InjectQueue(QUEUE_NAMES.MEDIA_QUEUE)
-    private readonly mediaQueue: Queue,
   ) {}
 
   public getMediaFilePath(
@@ -36,12 +21,8 @@ export class MediaService {
     seasonName?: string,
     ignoreNotFound: boolean = false,
   ): string | null {
-    const mediaPath = this.mediaConfig.getMediaPath(type);
-    const filePath = join(
-      __dirname,
-      '..',
-      '..',
-      mediaPath,
+    const filePath = this.mediaConfig.getPath(
+      type,
       decodeURIComponent(seriesName ?? ''),
       decodeURIComponent(seasonName ?? ''),
       decodeURIComponent(filename),
@@ -57,7 +38,7 @@ export class MediaService {
   }
 
   public async readMovieDirectory(
-    path: string = this.mediaConfig.getMediaPath(MediaType.MOVIE),
+    path: string = this.mediaConfig.getPath(MediaType.MOVIE),
     media_type: MediaType = MediaType.MOVIE,
     query: URLSearchParams = new URLSearchParams({
       media_type,
@@ -73,7 +54,7 @@ export class MediaService {
   }
 
   public async readMovieSeriesDirectory(
-    path: string = this.mediaConfig.getMediaPath(MediaType.MOVIE_SERIES),
+    path: string = this.mediaConfig.getPath(MediaType.MOVIE_SERIES),
     media_type: MediaType = MediaType.MOVIE_SERIES,
     series_name: string = '',
   ): Promise<MovieSeries[]> {
@@ -104,7 +85,7 @@ export class MediaService {
   }
 
   public async readSeriesDirectory(): Promise<Series[]> {
-    const path = this.mediaConfig.getMediaPath(MediaType.SERIES);
+    const path = this.mediaConfig.getPath(MediaType.SERIES);
     const shows = await readdir(path, { withFileTypes: true });
 
     const seriesPromises = shows.map(async (sc) => {
@@ -126,7 +107,7 @@ export class MediaService {
   }
 
   public async readDownloadsDirectory(): Promise<File[]> {
-    const path = this.mediaConfig.getMediaPath(MediaType.DOWNLOADS);
+    const path = this.mediaConfig.getPath(MediaType.DOWNLOADS);
     const files = await readdir(path, { withFileTypes: true });
 
     const data: File[] = await Promise.all(
@@ -148,11 +129,13 @@ export class MediaService {
 
   public async getJson(
     mediaType: MediaType,
-  ): Promise<Movies[] | MovieSeries[] | Series[] | File[]> {
+  ): Promise<Movies[] | MovieSeries[] | Series[]> {
     try {
-      const path = this.mediaConfig.getMediaPath(mediaType);
-      const json = await readFile(path, 'utf-8');
-      return JSON.parse(json);
+      const json = await this.mediaConfig.getJson<
+        Movies[] | MovieSeries[] | Series[]
+      >(mediaType);
+
+      return json;
     } catch (error) {
       throw new Error(`Failed to get json file: ${error}`);
     }
@@ -205,93 +188,5 @@ export class MediaService {
     } catch (error) {
       throw new Error(`Failed to create file: ${error}`);
     }
-  }
-
-  public async addToMediaQueue(
-    download: Omit<Downloadable, 'filePath'>,
-  ): Promise<boolean> {
-    try {
-      new URL(download.url);
-    } catch {
-      return false;
-    }
-
-    const filePath = this.getMediaFilePath(
-      download.filename,
-      MediaType.DOWNLOADS,
-      '',
-      '',
-      true,
-    );
-
-    const fileToDownload: Downloadable = { ...download, filePath };
-
-    const job = await this.mediaQueue.add(
-      JOBS_NAMES.DOWNLOAD_MEDIA,
-      fileToDownload,
-    );
-
-    return !!job;
-  }
-
-  private convertJob(jobs: Job<Downloadable>[]): MediaJob<Downloadable>[] {
-    return jobs.map((x): MediaJob<Downloadable> => {
-      const {
-        id,
-        progress,
-        name,
-        data,
-        failedReason,
-        processedOn,
-        finishedOn,
-      } = x;
-
-      return {
-        id,
-        progress: progress as number,
-        name,
-        data,
-        failedReason,
-        processedOn,
-        finishedOn,
-      };
-    });
-  }
-
-  public async getDownloadJobs(): Promise<DownloadJobs> {
-    const [waiting, active, completed, failed]: [
-      Job<Downloadable>[],
-      Job<Downloadable>[],
-      Job<Downloadable>[],
-      Job<Downloadable>[],
-    ] = await Promise.all([
-      this.mediaQueue.getWaiting(),
-      this.mediaQueue.getActive(),
-      this.mediaQueue.getCompleted(),
-      this.mediaQueue.getFailed(),
-    ]);
-
-    return {
-      active: this.convertJob(active),
-      waiting: this.convertJob(waiting),
-      completed: this.convertJob(completed),
-      failed: this.convertJob(failed),
-    };
-  }
-
-  public async getStorageInfo(): Promise<StorageInfo> {
-    const disks = await getDiskInfo();
-    const currentRoot = parse(process.cwd()).root;
-    const currentDisk = disks.find((disk) => disk.mounted == currentRoot);
-
-    const info = await stat(this.mediaConfig.getMediaPath(MediaType.DOWNLOADS));
-
-    return {
-      disk: currentDisk.mounted,
-      available: currentDisk.available,
-      used: currentDisk.blocks - currentDisk.available,
-      total: currentDisk.blocks,
-      usedByDownloads: info.size,
-    };
   }
 }

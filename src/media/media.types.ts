@@ -1,18 +1,4 @@
-export enum MediaType {
-  MEDIA = 'media',
-  MOVIE = 'movie',
-  SERIES = 'series',
-  DOWNLOADS = 'default_downloads',
-  MOVIE_SERIES = 'movie_series',
-  SERIES_JSON = 'series.json',
-  MOVIE_SERIES_JSON = 'movie_series.json',
-  DOWNLOADS_JSON = 'downloads.json',
-  MOVIE_JSON = 'movie.json',
-}
-
-export type MediaPaths = {
-  [key in MediaType]: string;
-};
+import { MediaType } from 'src/common/types';
 
 export interface MovieMetadata {
   title: string;
@@ -54,13 +40,6 @@ export interface Movies {
   url: string;
 }
 
-export interface Downloadable {
-  url: string;
-  type: MediaType;
-  filename: string;
-  filePath: string;
-}
-
 export interface MediaJob<T> {
   id?: string;
   name: string;
@@ -69,27 +48,4 @@ export interface MediaJob<T> {
   failedReason?: string;
   finishedOn?: number;
   processedOn?: number;
-}
-
-export interface DownloadJobs {
-  active: MediaJob<Downloadable>[];
-  completed: MediaJob<Downloadable>[];
-  waiting: MediaJob<Downloadable>[];
-  failed: MediaJob<Downloadable>[];
-}
-
-export interface File {
-  name: string;
-  size: number;
-  isDir: boolean;
-  extension: string;
-  path: string;
-}
-
-export interface StorageInfo {
-  total: number;
-  used: number;
-  available: number;
-  usedByDownloads: number;
-  disk: string;
 }
