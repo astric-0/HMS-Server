@@ -127,9 +127,13 @@ export class DownloadsService {
     const [isValid, path] = getDestionationPath(destinationInfo);
     if (!isValid) return false;
 
-    const destination = this.mediaConfig.getPath(destinationInfo.moveTo, path);
+    const destination = this.mediaConfig.getPath(
+      destinationInfo.moveTo,
+      path,
+      file.name,
+    );
 
-    await moveFile(source, destination, file.name);
+    await moveFile(source, destination);
     return true;
   }
 }
