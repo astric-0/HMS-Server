@@ -1,12 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { stat, unlink } from 'fs/promises';
+import { unlink } from 'fs/promises';
 import { getDiskInfo } from 'node-disk-info';
-import { parse } from 'path/posix';
 import { Directories, Jsons } from 'src/common/common.types';
 import { Action, StorageInfo, File } from './files.types';
 import { MediaConfig } from 'src/media/media.config';
 import { moveFile } from './files.helpers/move-file';
 import { getDestionationPath } from './files.helpers/get-destionation-path';
+import { resolve } from 'path';
+import { getDirectorySize } from './files.helpers/get-directory-size';
 
 @Injectable()
 export class FilesService {
@@ -43,17 +44,22 @@ export class FilesService {
 
   public async getStorageInfo(): Promise<StorageInfo> {
     const disks = await getDiskInfo();
-    const currentRoot = parse(process.cwd()).root;
-    const currentDisk = disks.find((disk) => disk.mounted == currentRoot);
 
-    const info = await stat(this.mediaConfig.getPath(Directories.DOWNLOADS));
+    const relativePath = this.mediaConfig.getPath(Directories.DOWNLOADS);
+    const downloadsAbsolutePath = resolve(process.cwd(), relativePath);
+
+    const currentDisk = disks.find((disk) =>
+      downloadsAbsolutePath.startsWith(disk.mounted),
+    );
+
+    const size = await getDirectorySize(relativePath);
 
     return {
       disk: currentDisk.mounted,
       available: currentDisk.available,
       used: currentDisk.blocks - currentDisk.available,
       total: currentDisk.blocks,
-      usedByDownloads: info.size,
+      usedByDownloads: size,
     };
   }
 }
