@@ -5,7 +5,7 @@ import { parse } from 'path/posix';
 import { Directories, Jsons } from 'src/common/common.types';
 import { Action, StorageInfo, File } from './files.types';
 import { MediaConfig } from 'src/media/media.config';
-import { moveFile } from 'src/files/files.helpers/move-file';
+import { moveFile } from './files.helpers/move-file';
 import { getDestionationPath } from './files.helpers/get-destionation-path';
 
 @Injectable()

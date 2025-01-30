@@ -5,7 +5,7 @@ import { downloadMedia } from './downloads.helpers/download-file';
 import { JOBS_NAMES, QUEUE_NAMES } from 'src/common/common.constants';
 import { Logger } from '@nestjs/common';
 
-@Processor(QUEUE_NAMES.MEDIA_QUEUE)
+@Processor(QUEUE_NAMES.MEDIA_QUEUE, { concurrency: 1 })
 export class DownloadsProcessor extends WorkerHost {
   private getJobProcessor(jobName: string): (job: Job) => any {
     switch (jobName) {
