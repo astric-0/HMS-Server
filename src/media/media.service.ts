@@ -2,10 +2,10 @@ import { Injectable, Inject } from '@nestjs/common';
 import { extname, join } from 'path';
 import { readdir, writeFile, stat } from 'fs/promises';
 import { existsSync, createReadStream, Dirent } from 'fs';
-import { File } from 'src/downloads/downloads.types';
 import { MediaConfig } from './media.config';
 import { Series, MovieSeries, Movies } from './media.types';
-import { MediaType } from 'src/common/types';
+import { Directories, Jsons, MediaType } from 'src/common/common.types';
+import { File } from 'src/files/files.types';
 
 @Injectable()
 export class MediaService {
@@ -38,8 +38,8 @@ export class MediaService {
   }
 
   public async readMovieDirectory(
-    path: string = this.mediaConfig.getPath(MediaType.MOVIE),
-    media_type: MediaType = MediaType.MOVIE,
+    path: string = this.mediaConfig.getPath(Directories.MOVIE),
+    media_type: MediaType = Directories.MOVIE,
     query: URLSearchParams = new URLSearchParams({
       media_type,
     }),
@@ -54,8 +54,8 @@ export class MediaService {
   }
 
   public async readMovieSeriesDirectory(
-    path: string = this.mediaConfig.getPath(MediaType.MOVIE_SERIES),
-    media_type: MediaType = MediaType.MOVIE_SERIES,
+    path: string = this.mediaConfig.getPath(Directories.MOVIE_SERIES),
+    media_type: MediaType = Directories.MOVIE_SERIES,
     series_name: string = '',
   ): Promise<MovieSeries[]> {
     const seasons = await readdir(path, { withFileTypes: true });
@@ -85,7 +85,7 @@ export class MediaService {
   }
 
   public async readSeriesDirectory(): Promise<Series[]> {
-    const path = this.mediaConfig.getPath(MediaType.SERIES);
+    const path = this.mediaConfig.getPath(Directories.SERIES);
     const shows = await readdir(path, { withFileTypes: true });
 
     const seriesPromises = shows.map(async (sc) => {
@@ -93,7 +93,7 @@ export class MediaService {
 
       const seasons = await this.readMovieSeriesDirectory(
         join(path, sc.name),
-        MediaType.SERIES,
+        Directories.SERIES,
         sc.name,
       );
 
@@ -107,7 +107,7 @@ export class MediaService {
   }
 
   public async readDownloadsDirectory(): Promise<File[]> {
-    const path = this.mediaConfig.getPath(MediaType.DOWNLOADS);
+    const path = this.mediaConfig.getPath(Directories.DOWNLOADS);
     const files = await readdir(path, { withFileTypes: true });
 
     const data: File[] = await Promise.all(
@@ -145,7 +145,7 @@ export class MediaService {
     try {
       const json: MovieSeries[] = await this.readMovieSeriesDirectory();
       await writeFile(
-        this.mediaConfig.getMediaPath(MediaType.MOVIE_SERIES_JSON),
+        this.mediaConfig.getMediaPath(Jsons.MOVIE_SERIES_JSON),
         JSON.stringify(json, null, 2),
       );
     } catch (error) {
@@ -154,33 +154,30 @@ export class MediaService {
   }
 
   public async readJson(
-    mediaType: MediaType,
-  ): Promise<[MovieSeries[] | Movies[] | Series[] | File[], MediaType]> {
+    dirType: Directories,
+  ): Promise<[MovieSeries[] | Movies[] | Series[] | File[], Jsons]> {
     try {
-      switch (mediaType) {
-        case MediaType.MOVIE_SERIES:
+      switch (dirType) {
+        case Directories.MOVIE_SERIES:
           return [
             await this.readMovieSeriesDirectory(),
-            MediaType.MOVIE_SERIES_JSON,
+            Jsons.MOVIE_SERIES_JSON,
           ];
-        case MediaType.MOVIE:
-          return [await this.readMovieDirectory(), MediaType.MOVIE_JSON];
-        case MediaType.SERIES:
-          return [await this.readSeriesDirectory(), MediaType.SERIES_JSON];
-        case MediaType.DOWNLOADS:
-          return [
-            await this.readDownloadsDirectory(),
-            MediaType.DOWNLOADS_JSON,
-          ];
+        case Directories.MOVIE:
+          return [await this.readMovieDirectory(), Jsons.MOVIE_JSON];
+        case Directories.SERIES:
+          return [await this.readSeriesDirectory(), Jsons.SERIES_JSON];
+        case Directories.DOWNLOADS:
+          return [await this.readDownloadsDirectory(), Jsons.DOWNLOADS_JSON];
       }
     } catch (error) {
       throw new Error(`Failed to read directory: ${error}`);
     }
   }
 
-  public async createJson(mediaType: MediaType) {
+  public async createJson(dir: Directories) {
     try {
-      const [json, jsonMediaType] = await this.readJson(mediaType);
+      const [json, jsonMediaType] = await this.readJson(dir);
       await writeFile(
         this.mediaConfig.getMediaPath(jsonMediaType),
         JSON.stringify(json, null, 2),

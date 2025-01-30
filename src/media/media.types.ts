@@ -1,4 +1,4 @@
-import { MediaType } from 'src/common/types';
+import { MediaType } from 'src/common/common.types';
 
 export interface MovieMetadata {
   title: string;

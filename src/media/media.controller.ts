@@ -15,7 +15,7 @@ import { statSync } from 'fs';
 import { Response, Request } from 'express';
 
 import { MediaService } from './media.service';
-import { MediaType } from 'src/common/types';
+import { Directories, Jsons, MediaType } from 'src/common/common.types';
 
 @Controller('media')
 export class MediaController {
@@ -85,27 +85,27 @@ export class MediaController {
 
   @Get('movies/list')
   async getMovieList() {
-    const movies = await this.mediaService.getJson(MediaType.MOVIE_JSON);
+    const movies = await this.mediaService.getJson(Jsons.MOVIE_JSON);
     return { movies };
   }
 
   @Get('series/list')
   async getSeriesList() {
-    const series = await this.mediaService.getJson(MediaType.SERIES_JSON);
+    const series = await this.mediaService.getJson(Jsons.SERIES_JSON);
     return { series };
   }
 
   @Get('movie-series/list')
   async getMovieSeriesList() {
     const movieSeries = await this.mediaService.getJson(
-      MediaType.MOVIE_SERIES_JSON,
+      Jsons.MOVIE_SERIES_JSON,
     );
 
     return { movieSeries };
   }
 
   @Post('json')
-  async createJson(@Body('media_type') mediaType: MediaType) {
+  async createJson(@Body('media_type') mediaType: Directories) {
     try {
       await this.mediaService.createJson(mediaType);
 

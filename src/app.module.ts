@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
 import { MediaModule } from './media/media.module';
 import { DownloadsModule } from './downloads/downloads.module';
+import { FilesModule } from './files/files.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { DownloadsModule } from './downloads/downloads.module';
     }),
     MediaModule,
     DownloadsModule,
+    FilesModule,
   ],
 })
 export class AppModule {}

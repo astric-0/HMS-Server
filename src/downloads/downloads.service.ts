@@ -1,23 +1,13 @@
 import { InjectQueue } from '@nestjs/bullmq';
-import { parse } from 'path/posix';
+
 import { Inject, Injectable } from '@nestjs/common';
 import { join } from 'path';
 import { Job, Queue } from 'bullmq';
-import { stat, unlink } from 'fs/promises';
-import { getDiskInfo } from 'node-disk-info';
+
 import { MediaConfig } from 'src/media/media.config';
-import { JOBS_NAMES, QUEUE_NAMES } from 'src/common/constants';
-import { MediaType } from 'src/common/types';
-import {
-  Downloadable,
-  DownloadJobs,
-  MediaJob,
-  StorageInfo,
-  File,
-  Action,
-} from './downloads.types';
-import { getDestionationPath } from './downloads.helpers/getDestionationPath';
-import { moveFile } from './downloads.helpers/moveFile';
+import { JOBS_NAMES, QUEUE_NAMES } from 'src/common/common.constants';
+import { Directories } from 'src/common/common.types';
+import { Downloadable, DownloadJobs, MediaJob } from './downloads.types';
 
 @Injectable()
 export class DownloadsService {
@@ -35,7 +25,7 @@ export class DownloadsService {
       return false;
     }
 
-    const downloadDir = this.mediaConfig.getPath(MediaType.DOWNLOADS);
+    const downloadDir = this.mediaConfig.getPath(Directories.DOWNLOADS);
     const filePath = join(downloadDir, download.filename);
     const fileToDownload: Downloadable = { ...download, filePath };
 
@@ -71,10 +61,6 @@ export class DownloadsService {
     });
   }
 
-  public async getJson(): Promise<File[]> {
-    return await this.mediaConfig.getJson<File[]>(MediaType.DOWNLOADS_JSON);
-  }
-
   public async getDownloadJobs(): Promise<DownloadJobs> {
     const [waiting, active, completed, failed]: [
       Job<Downloadable>[],
@@ -94,46 +80,5 @@ export class DownloadsService {
       completed: this.convertJob(completed),
       failed: this.convertJob(failed),
     };
-  }
-
-  public async getStorageInfo(): Promise<StorageInfo> {
-    const disks = await getDiskInfo();
-    const currentRoot = parse(process.cwd()).root;
-    const currentDisk = disks.find((disk) => disk.mounted == currentRoot);
-
-    const info = await stat(this.mediaConfig.getPath(MediaType.DOWNLOADS));
-
-    return {
-      disk: currentDisk.mounted,
-      available: currentDisk.available,
-      used: currentDisk.blocks - currentDisk.available,
-      total: currentDisk.blocks,
-      usedByDownloads: info.size,
-    };
-  }
-
-  public async deleteFile(file: File): Promise<boolean> {
-    const path = this.mediaConfig.getPath(MediaType.DOWNLOADS, file.name);
-    await unlink(path);
-    return true;
-  }
-
-  public async performMoveAction({
-    file,
-    destinationInfo,
-  }: Action): Promise<boolean> {
-    const source = this.mediaConfig.getPath(MediaType.DOWNLOADS, file.name);
-
-    const [isValid, path] = getDestionationPath(destinationInfo);
-    if (!isValid) return false;
-
-    const destination = this.mediaConfig.getPath(
-      destinationInfo.moveTo,
-      path,
-      file.name,
-    );
-
-    await moveFile(source, destination);
-    return true;
   }
 }

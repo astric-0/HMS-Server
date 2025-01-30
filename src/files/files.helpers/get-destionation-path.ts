@@ -1,14 +1,14 @@
-import { MediaType } from 'src/common/types';
-import { Action } from '../downloads.types';
+import { Directories } from 'src/common/common.types';
+import { Action } from '../files.types';
 import { join } from 'path';
 
 export const getDestionationPath = (
   destinationInfo: Action['destinationInfo'],
 ): [boolean, string] => {
   const mediaTypeAssociatedLenghts = {
-    [MediaType.MOVIE]: 0,
-    [MediaType.MOVIE_SERIES]: 1,
-    [MediaType.SERIES]: 2,
+    [Directories.MOVIE]: 0,
+    [Directories.MOVIE_SERIES]: 1,
+    [Directories.SERIES]: 2,
   };
 
   if (

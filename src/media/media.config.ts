@@ -2,7 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { readFile } from 'fs/promises';
 import { join } from 'path/posix';
-import { MediaType, MediaPaths } from 'src/common/types';
+import {
+  MediaType,
+  MediaPaths,
+  Directories,
+  Jsons,
+} from 'src/common/common.types';
 
 @Injectable()
 export class MediaConfig {
@@ -10,17 +15,17 @@ export class MediaConfig {
 
   public constructor(private readonly configService: ConfigService) {
     this.mediaPaths = {
-      [MediaType.MEDIA]: this.configService.get('MEDIA_DIR'),
-      [MediaType.MOVIE]: this.configService.get('MOVIE_DIR'),
-      [MediaType.SERIES]: this.configService.get('SERIES_DIR'),
-      [MediaType.MOVIE_SERIES]: this.configService.get('MOVIE_SERIES_DIR'),
-      [MediaType.MOVIE_JSON]: this.configService.get('MOVIE_JSON_PATH'),
-      [MediaType.MOVIE_SERIES_JSON]: this.configService.get(
+      [Directories.MEDIA]: this.configService.get('MEDIA_DIR'),
+      [Directories.MOVIE]: this.configService.get('MOVIE_DIR'),
+      [Directories.SERIES]: this.configService.get('SERIES_DIR'),
+      [Directories.MOVIE_SERIES]: this.configService.get('MOVIE_SERIES_DIR'),
+      [Jsons.MOVIE_JSON]: this.configService.get('MOVIE_JSON_PATH'),
+      [Jsons.MOVIE_SERIES_JSON]: this.configService.get(
         'MOVIE_SERIES_JSON_PATH',
       ),
-      [MediaType.SERIES_JSON]: this.configService.get('SERIES_JSON_PATH'),
-      [MediaType.DOWNLOADS]: this.configService.get('DEFAULT_DOWNLOAD_DIR'),
-      [MediaType.DOWNLOADS_JSON]: this.configService.get(
+      [Jsons.SERIES_JSON]: this.configService.get('SERIES_JSON_PATH'),
+      [Directories.DOWNLOADS]: this.configService.get('DEFAULT_DOWNLOAD_DIR'),
+      [Jsons.DOWNLOADS_JSON]: this.configService.get(
         'DEFAULT_DOWNLOAD_JSON_PATH',
       ),
     };

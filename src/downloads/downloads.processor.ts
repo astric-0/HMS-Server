@@ -1,8 +1,8 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 
-import { downloadMedia } from './downloads.helpers/downloadFile';
-import { JOBS_NAMES, QUEUE_NAMES } from 'src/common/constants';
+import { downloadMedia } from './downloads.helpers/download-file';
+import { JOBS_NAMES, QUEUE_NAMES } from 'src/common/common.constants';
 import { Logger } from '@nestjs/common';
 
 @Processor(QUEUE_NAMES.MEDIA_QUEUE)
