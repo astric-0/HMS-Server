@@ -35,6 +35,17 @@ export class MediaConfig {
     return this.mediaPaths[type];
   }
 
+  public mapDirectoriesToJsons(dirType: Directories): Jsons {
+    switch (dirType) {
+      case Directories.MOVIE:
+        return this.getMediaPath(Jsons.MOVIE_JSON) as Jsons;
+      case Directories.DOWNLOADS:
+        return this.getMediaPath(Jsons.DOWNLOADS_JSON) as Jsons;
+      case Directories.MOVIE_SERIES:
+        return this.getMediaPath(Jsons.MOVIE_SERIES_JSON) as Jsons;
+    }
+  }
+
   public async getJson<T>(mediaType: MediaType): Promise<T> {
     try {
       const path = this.getMediaPath(mediaType);

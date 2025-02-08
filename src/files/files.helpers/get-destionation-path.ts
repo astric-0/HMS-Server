@@ -1,9 +1,9 @@
 import { Directories } from 'src/common/common.types';
-import { Action } from '../files.types';
+import { FileAction } from '../files.types';
 import { join } from 'path';
 
 export const getDestionationPath = (
-  destinationInfo: Action['destinationInfo'],
+  destinationInfo: FileAction['destination'],
 ): [boolean, string] => {
   const mediaTypeAssociatedLenghts = {
     [Directories.MOVIE]: 0,
@@ -13,7 +13,7 @@ export const getDestionationPath = (
 
   if (
     destinationInfo.path.length !=
-    mediaTypeAssociatedLenghts[destinationInfo.moveTo]
+    mediaTypeAssociatedLenghts[destinationInfo.rootDir]
   )
     return [false, ''];
 

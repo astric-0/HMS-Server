@@ -2,20 +2,31 @@ import { Directories } from 'src/common/common.types';
 
 export enum ActionType {
   MOVE = 'move',
+  EXTRACT = 'extract',
 }
 
-export type ManagedDirectories =
-  | Directories.MOVIE
-  | Directories.MOVIE_SERIES
-  | Directories.SERIES;
+// export interface FileAction {
+//   actionType: ActionType;
+//   file: File;
 
-export interface Action {
+//   destination:
+//   destinationInfo: {
+//     destinationRoot: Directories;
+//     sourceRoot: Directories;
+//     path: string[];
+//   };
+// }
+
+export interface FileAction {
   actionType: ActionType;
-  file: File;
-  destinationInfo: {
-    moveTo: ManagedDirectories;
-    path: string[];
-  };
+  filename: string;
+  source: RouteInfo;
+  destination: RouteInfo;
+}
+
+export interface RouteInfo {
+  rootDir: Directories;
+  path: string[];
 }
 
 export interface StorageInfo {

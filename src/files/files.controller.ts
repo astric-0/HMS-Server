@@ -6,20 +6,30 @@ import {
   Inject,
   InternalServerErrorException,
   BadRequestException,
-  Patch,
+  //Patch,
+  Param,
+  Query,
 } from '@nestjs/common';
-import { Action, StorageInfo, File } from './files.types';
+import {
+  StorageInfo,
+  File,
+  //FileAction
+} from './files.types';
 import { FilesService } from './files.service';
+import { Directories } from 'src/common/common.types';
 
 @Controller('files')
 export class FilesController {
   constructor(@Inject() private readonly filesService: FilesService) {}
 
-  @Get()
-  async getDownloadDirContents() {
+  @Get('directory/:rootDir')
+  async getDirContents(
+    @Param('rootDir') rootDir: Directories = Directories.DOWNLOADS,
+    @Query('path') path: string = '',
+  ) {
     const [storageInfo, files]: [StorageInfo, File[]] = await Promise.all([
       this.filesService.getStorageInfo(),
-      this.filesService.getJson(),
+      this.filesService.getDirectoryFiles({ rootDir, path: path.split(',') }),
     ]);
 
     return { files, storageInfo };
@@ -36,9 +46,9 @@ export class FilesController {
     }
   }
 
-  @Patch(':filename/move')
-  async performMoveAction(@Body() action: Action) {
-    const result = await this.filesService.performMoveAction(action);
-    if (!result) throw new BadRequestException({ message: 'Invalid values' });
-  }
+  // @Patch(':filename/move')
+  // async performMoveAction(@Body() action: FileAction) {
+  //   const result = await this.filesService.performMoveAction(action);
+  //   if (!result) throw new BadRequestException({ message: 'Invalid values' });
+  // }
 }
