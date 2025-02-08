@@ -6,15 +6,11 @@ import {
   Inject,
   InternalServerErrorException,
   BadRequestException,
-  //Patch,
+  Patch,
   Param,
   Query,
 } from '@nestjs/common';
-import {
-  StorageInfo,
-  File,
-  //FileAction
-} from './files.types';
+import { File, FileAction, RouteInfo } from './files.types';
 import { FilesService } from './files.service';
 import { Directories } from 'src/common/common.types';
 
@@ -27,28 +23,35 @@ export class FilesController {
     @Param('rootDir') rootDir: Directories = Directories.DOWNLOADS,
     @Query('path') path: string = '',
   ) {
-    const [storageInfo, files]: [StorageInfo, File[]] = await Promise.all([
-      this.filesService.getStorageInfo(),
-      this.filesService.getDirectoryFiles({ rootDir, path: path.split(',') }),
-    ]);
+    const files: File[] = await this.filesService.getDirectoryFiles({
+      rootDir,
+      path: path.split(','),
+    });
 
-    return { files, storageInfo };
+    return { files };
   }
 
-  @Delete()
-  async deleteFile(@Body() file: File) {
-    if (!file.name) throw new BadRequestException('Invalid file name');
+  @Delete(':filename')
+  async deleteFile(
+    @Body() { source, isDir }: { source: RouteInfo; isDir: boolean },
+    @Param('filename') filename: string,
+  ) {
+    if ((!source.path.length && !filename) || !source.rootDir)
+      throw new BadRequestException(
+        'Source path and root dir are strictly required',
+      );
+
     try {
-      this.filesService.deleteFile(file);
+      await this.filesService.deleteFile(source, filename, isDir);
       return { message: 'File removed successfully' };
     } catch (error) {
       throw new InternalServerErrorException({ error: error.message });
     }
   }
 
-  // @Patch(':filename/move')
-  // async performMoveAction(@Body() action: FileAction) {
-  //   const result = await this.filesService.performMoveAction(action);
-  //   if (!result) throw new BadRequestException({ message: 'Invalid values' });
-  // }
+  @Patch(':filename/move')
+  async performMoveAction(@Body() action: FileAction) {
+    const result = await this.filesService.performMoveAction(action);
+    if (!result) throw new BadRequestException({ message: 'Invalid values' });
+  }
 }

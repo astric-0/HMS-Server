@@ -1,25 +1,19 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { unlink } from 'fs/promises';
+import { unlink, rm } from 'fs/promises';
 import { getDiskInfo } from 'node-disk-info';
-import {
-  Directories,
-  // Jsons
-} from 'src/common/common.types';
-import {
-  //FileAction,
-  StorageInfo,
-  File,
-  // FileActionInfo,
-  RouteInfo,
-} from './files.types';
-import { MediaConfig } from 'src/media/media.config';
-//import { moveFile } from './files.helpers/move-file';
-//import { getDestionationPath } from './files.helpers/get-destionation-path';
-import { resolve } from 'path';
-import { getDirectorySize } from './files.helpers/get-directory-size';
-import { InjectQueue } from '@nestjs/bullmq';
-import { QUEUE_NAMES } from 'src/common/common.constants';
 import { Queue } from 'bullmq';
+import { resolve } from 'path';
+import { InjectQueue } from '@nestjs/bullmq';
+
+import { MediaConfig } from 'src/media/media.config';
+
+import { QUEUE_NAMES } from 'src/common/common.constants';
+import { Directories } from 'src/common/common.types';
+
+import { StorageInfo, File, RouteInfo, FileAction } from './files.types';
+
+import { moveFile } from './files.helpers/move-file';
+import { getDirectorySize } from './files.helpers/get-directory-size';
 import { readDirectory } from './files.helpers/read-directory';
 
 @Injectable()
@@ -40,30 +34,22 @@ export class FilesService {
     return readDirectory(path);
   }
 
-  public async deleteFile(file: File): Promise<boolean> {
-    const path = this.mediaConfig.getPath(Directories.DOWNLOADS, file.name);
-    await unlink(path);
+  public async deleteFile(
+    source: RouteInfo,
+    filename: string,
+    isDir: boolean,
+  ): Promise<boolean> {
+    const path = this.mediaConfig.getPath(
+      source.rootDir,
+      ...(source.path ?? []),
+      filename ?? '',
+    );
+
+    if (!isDir) await rm(path, { recursive: true, force: true });
+    else await unlink(path);
+
     return true;
   }
-
-  // public async performMoveAction({
-  //   file,
-  //   destinationInfo,
-  // }: FileAction): Promise<boolean> {
-  //   const source = this.mediaConfig.getPath(Directories.DOWNLOADS, file.name);
-
-  //   const [isValid, path] = getDestionationPath(destinationInfo);
-  //   if (!isValid) return false;
-
-  //   const destination = this.mediaConfig.getPath(
-  //     destinationInfo.sourceRoot,
-  //     path,
-  //     file.name,
-  //   );
-
-  //   await moveFile(source, destination);
-  //   return true;
-  // }
 
   public async getStorageInfo(): Promise<StorageInfo> {
     const disks = await getDiskInfo();
@@ -84,6 +70,27 @@ export class FilesService {
       total: currentDisk.blocks,
       usedByDownloads: size,
     };
+  }
+
+  public async performMoveAction({
+    filename,
+    source,
+    destination,
+  }: FileAction): Promise<boolean> {
+    const sourcePath = this.mediaConfig.getPath(
+      source.rootDir,
+      ...source.path,
+      filename,
+    );
+
+    const destinationPath = this.mediaConfig.getPath(
+      destination.rootDir,
+      ...destination.path,
+      filename,
+    );
+
+    await moveFile(sourcePath, destinationPath);
+    return true;
   }
 
   // public async addToExtractionQueue(fileAction: FileActionInfo) {
