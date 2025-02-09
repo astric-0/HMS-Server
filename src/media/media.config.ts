@@ -19,12 +19,12 @@ export class MediaConfig {
       [Directories.MOVIE]: this.configService.get('MOVIE_DIR'),
       [Directories.SERIES]: this.configService.get('SERIES_DIR'),
       [Directories.MOVIE_SERIES]: this.configService.get('MOVIE_SERIES_DIR'),
+      [Directories.DOWNLOADS]: this.configService.get('DEFAULT_DOWNLOAD_DIR'),
       [Jsons.MOVIE_JSON]: this.configService.get('MOVIE_JSON_PATH'),
       [Jsons.MOVIE_SERIES_JSON]: this.configService.get(
         'MOVIE_SERIES_JSON_PATH',
       ),
       [Jsons.SERIES_JSON]: this.configService.get('SERIES_JSON_PATH'),
-      [Directories.DOWNLOADS]: this.configService.get('DEFAULT_DOWNLOAD_DIR'),
       [Jsons.DOWNLOADS_JSON]: this.configService.get(
         'DEFAULT_DOWNLOAD_JSON_PATH',
       ),

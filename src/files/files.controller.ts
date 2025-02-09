@@ -13,7 +13,7 @@ import {
 import { File, FileAction, RouteInfo } from './files.types';
 import { FilesService } from './files.service';
 import { Directories } from 'src/common/common.types';
-import { CheckIfBackwardsPath } from './files.helpers/check-if-backwards-path';
+import { checkIfBackwardsPath } from '../common/common.helpers/check-if-backwards-path';
 
 @Controller('files')
 export class FilesController {
@@ -43,7 +43,7 @@ export class FilesController {
       );
     }
 
-    if (CheckIfBackwardsPath(filename, source.rootDir, ...source.path))
+    if (checkIfBackwardsPath(filename, source.rootDir, ...source.path))
       throw new BadRequestException("Can't include backwards path");
 
     try {

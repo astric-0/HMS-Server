@@ -6,16 +6,19 @@ import {
   Req,
   Param,
   InternalServerErrorException,
-  Query,
   NotFoundException,
+  BadRequestException,
+  Query,
   Inject,
   Body,
+  StreamableFile,
 } from '@nestjs/common';
-import { statSync } from 'fs';
+import { createReadStream, statSync } from 'fs';
 import { Response, Request } from 'express';
 
 import { MediaService } from './media.service';
 import { Directories, Jsons, MediaType } from 'src/common/common.types';
+import { checkIfBackwardsPath } from 'src/common/common.helpers/check-if-backwards-path';
 
 @Controller('media')
 export class MediaController {
@@ -113,5 +116,39 @@ export class MediaController {
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
+  }
+
+  @Get('file/:filename/download')
+  async downloadFile(
+    @Param('filename') filename: string,
+    @Query('media_type') mediaType: MediaType,
+    @Res({ passthrough: true }) res: Response,
+    @Query('series_name') seriesName?: string,
+    @Query('season_name') seasonName?: string,
+  ) {
+    if (checkIfBackwardsPath(mediaType, seriesName, seasonName, filename))
+      return new BadRequestException("Path can't be backwards");
+
+    const filePath = this.mediaService.getMediaFilePath(
+      filename,
+      mediaType,
+      seriesName,
+      seasonName,
+    );
+
+    if (!filePath) {
+      throw new BadRequestException(
+        'Source path and root dir are strictly required',
+      );
+    }
+
+    const fileStream = createReadStream(filePath);
+
+    res.set({
+      'Content-Type': 'application/octet-stream',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+    });
+
+    return new StreamableFile(fileStream);
   }
 }

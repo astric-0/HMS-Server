@@ -50,6 +50,7 @@ export class MediaService {
       name: filename,
       type: media_type,
       url: `/media/file/${encodeURIComponent(filename)}?${query.toString()}`,
+      downloadUrl: `/media/file/${encodeURIComponent(filename)}/download?${query.toString()}`,
     }));
   }
 
@@ -138,18 +139,6 @@ export class MediaService {
       return json;
     } catch (error) {
       throw new Error(`Failed to get json file: ${error}`);
-    }
-  }
-
-  public async createMovieSeriesJson() {
-    try {
-      const json: MovieSeries[] = await this.readMovieSeriesDirectory();
-      await writeFile(
-        this.mediaConfig.getMediaPath(Jsons.MOVIE_SERIES_JSON),
-        JSON.stringify(json, null, 2),
-      );
-    } catch (error) {
-      throw new Error(`Failed to create movie series.json: ${error}`);
     }
   }
 
