@@ -5,21 +5,8 @@ export enum ActionType {
   EXTRACT = 'extract',
 }
 
-// export interface FileAction {
-//   actionType: ActionType;
-//   file: File;
-
-//   destination:
-//   destinationInfo: {
-//     destinationRoot: Directories;
-//     sourceRoot: Directories;
-//     path: string[];
-//   };
-// }
-
 export interface FileAction {
   actionType: ActionType;
-  filename: string;
   source: RouteInfo;
   destination: RouteInfo;
 }

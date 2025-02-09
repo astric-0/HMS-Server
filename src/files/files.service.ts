@@ -72,11 +72,10 @@ export class FilesService {
     };
   }
 
-  public async performMoveAction({
-    filename,
-    source,
-    destination,
-  }: FileAction): Promise<boolean> {
+  public async performMoveAction(
+    filename: string,
+    { source, destination }: FileAction,
+  ): Promise<boolean> {
     const sourcePath = this.mediaConfig.getPath(
       source.rootDir,
       ...source.path,

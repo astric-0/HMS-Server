@@ -13,6 +13,7 @@ import {
 import { File, FileAction, RouteInfo } from './files.types';
 import { FilesService } from './files.service';
 import { Directories } from 'src/common/common.types';
+import { CheckIfBackwardsPath } from './files.helpers/check-if-backwards-path';
 
 @Controller('files')
 export class FilesController {
@@ -36,10 +37,14 @@ export class FilesController {
     @Body() { source, isDir }: { source: RouteInfo; isDir: boolean },
     @Param('filename') filename: string,
   ) {
-    if ((!source.path.length && !filename) || !source.rootDir)
+    if ((!source.path.length && !filename) || !source.rootDir) {
       throw new BadRequestException(
         'Source path and root dir are strictly required',
       );
+    }
+
+    if (CheckIfBackwardsPath(filename, source.rootDir, ...source.path))
+      throw new BadRequestException("Can't include backwards path");
 
     try {
       await this.filesService.deleteFile(source, filename, isDir);
@@ -50,8 +55,11 @@ export class FilesController {
   }
 
   @Patch(':filename/move')
-  async performMoveAction(@Body() action: FileAction) {
-    const result = await this.filesService.performMoveAction(action);
+  async performMoveAction(
+    @Param('filename') filename: string,
+    @Body() action: FileAction,
+  ) {
+    const result = await this.filesService.performMoveAction(filename, action);
     if (!result) throw new BadRequestException({ message: 'Invalid values' });
   }
 }
